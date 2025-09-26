@@ -86,7 +86,7 @@ public class AutoClicker extends Module {
             case Press -> {
                 leftClickTimer++;
                 if (leftClickTimer > leftClickDelay.get()) {
-                    Utils.leftClick();
+                    Utils.attack();
                     leftClickTimer = 0;
                 }
             }

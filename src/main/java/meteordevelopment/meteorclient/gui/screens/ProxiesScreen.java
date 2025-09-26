@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.gui.screens;
 
+import finalforeach.cosmicreach.gamestates.GameState;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
@@ -17,7 +18,7 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WMinus;
 import meteordevelopment.meteorclient.settings.Settings;
 import meteordevelopment.meteorclient.systems.proxies.Proxies;
 import meteordevelopment.meteorclient.systems.proxies.Proxy;
-import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+import meteordevelopment.meteorclient.utils.misc.DataTagUtils;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryUtil;
@@ -27,8 +28,6 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class ProxiesScreen extends WindowScreen {
     private final List<WCheckbox> checkboxes = new ArrayList<>();
@@ -48,7 +47,7 @@ public class ProxiesScreen extends WindowScreen {
 
         // New
         WButton newBtn = l.add(theme.button("New")).expandX().widget();
-        newBtn.action = () -> mc.setScreen(new EditProxyScreen(theme, null, this::reload));
+        newBtn.action = () -> GameState.switchToGameState(new EditProxyScreen(theme, null, this::reload));
 
         // Import
         PointerBuffer filters = BufferUtils.createPointerBuffer(1);
@@ -63,7 +62,7 @@ public class ProxiesScreen extends WindowScreen {
             String selectedFile = TinyFileDialogs.tinyfd_openFileDialog("Import Proxies", null, filters, null, false);
             if (selectedFile != null) {
                 File file = new File(selectedFile);
-                mc.setScreen(new ProxiesImportScreen(theme, file));
+                GameState.switchToGameState(new ProxiesImportScreen(theme, file));
             }
         };
     }
@@ -97,7 +96,7 @@ public class ProxiesScreen extends WindowScreen {
             ipList.add(theme.label(Integer.toString(proxy.port.get())));
 
             WButton edit = table.add(theme.button(GuiRenderer.EDIT)).widget();
-            edit.action = () -> mc.setScreen(new EditProxyScreen(theme, proxy, this::reload));
+            edit.action = () -> GameState.switchToGameState(new EditProxyScreen(theme, proxy, this::reload));
 
             WMinus remove = table.add(theme.minus()).widget();
             remove.action = () -> {
@@ -111,12 +110,22 @@ public class ProxiesScreen extends WindowScreen {
 
     @Override
     public boolean toClipboard() {
-        return NbtUtils.toClipboard(Proxies.get());
+        return DataTagUtils.toClipboard(Proxies.get());
     }
 
     @Override
     public boolean fromClipboard() {
-        return NbtUtils.fromClipboard(Proxies.get());
+        return DataTagUtils.fromClipboard(Proxies.get());
+    }
+
+    @Override
+    public boolean touchCancelled(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
+        return false;
     }
 
     protected static class EditProxyScreen extends EditSystemScreen<Proxy> {
@@ -137,6 +146,16 @@ public class ProxiesScreen extends WindowScreen {
         @Override
         public Settings getSettings() {
             return value.settings;
+        }
+
+        @Override
+        public boolean touchCancelled(int i, int i1, int i2, int i3) {
+            return false;
+        }
+
+        @Override
+        public boolean touchDragged(int i, int i1, int i2) {
+            return false;
         }
     }
 }

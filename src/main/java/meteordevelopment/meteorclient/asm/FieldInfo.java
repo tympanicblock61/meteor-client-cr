@@ -5,8 +5,8 @@
 
 package meteordevelopment.meteorclient.asm;
 
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.MappingResolver;
+//import net.fabricmc.loader.api.FabricLoader;
+//import net.fabricmc.loader.api.MappingResolver;
 import org.objectweb.asm.tree.FieldInsnNode;
 
 public class FieldInfo {
@@ -14,11 +14,14 @@ public class FieldInfo {
 
     public FieldInfo(String owner, String name, Descriptor descriptor, boolean map) {
         if (map) {
-            MappingResolver mappings = FabricLoader.getInstance().getMappingResolver();
-            String ownerDot = owner.replace('/', '.');
-
-            if (owner != null) this.owner = mappings.mapClassName("intermediary", ownerDot).replace('.', '/');
-            if (name != null && descriptor != null) this.name = mappings.mapFieldName("intermediary", ownerDot, name, descriptor.toString(false, false));
+            //TODO remove
+//            MappingResolver mappings = FabricLoader.getInstance().getMappingResolver();
+//            String ownerDot = owner.replace('/', '.');
+//
+//            if (owner != null) this.owner = mappings.mapClassName("intermediary", ownerDot).replace('.', '/');
+//            if (name != null && descriptor != null) this.name = mappings.mapFieldName("intermediary", ownerDot, name, descriptor.toString(false, false));
+            this.owner = owner;
+            this.name = name;
         }
         else {
             this.owner = owner;

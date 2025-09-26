@@ -5,8 +5,12 @@
 
 package meteordevelopment.meteorclient.gui.utils;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.BooleanDataAttribute;
+import com.github.puzzle.game.items.data.attributes.DoubleDataAttribute;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
 
 public class WindowConfig implements ISerializable<WindowConfig> {
     public boolean expanded = true;
@@ -16,22 +20,19 @@ public class WindowConfig implements ISerializable<WindowConfig> {
     // Saving
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-
-        tag.putBoolean("expanded", expanded);
-        tag.putDouble("x", x);
-        tag.putDouble("y", y);
-
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("expanded", new BooleanDataAttribute(expanded)));
+        tag.addTag(new DataTag<>("x", new DoubleDataAttribute(x)));
+        tag.addTag(new DataTag<>("y", new DoubleDataAttribute(y)));
         return tag;
     }
 
     @Override
-    public WindowConfig fromTag(NbtCompound tag) {
-        expanded = tag.getBoolean("expanded");
-        x = tag.getDouble("x");
-        y = tag.getDouble("y");
-
+    public WindowConfig fromTag(DataTagManifest tag) {
+        expanded = tag.getTag("expanded").getTagAsType(Boolean.TYPE).getValue();
+        x = tag.getTag("x").getTagAsType(Double.TYPE).getValue();
+        y = tag.getTag("y").getTagAsType(Double.TYPE).getValue();
         return this;
     }
 }

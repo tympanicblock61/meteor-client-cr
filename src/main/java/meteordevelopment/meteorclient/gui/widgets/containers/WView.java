@@ -5,10 +5,11 @@
 
 package meteordevelopment.meteorclient.gui.widgets.containers;
 
+import com.badlogic.gdx.math.MathUtils;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.utils.Utils;
-import net.minecraft.util.math.MathHelper;
+//import net.minecraft.util.math.MathHelper;
 
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 
@@ -64,7 +65,7 @@ public abstract class WView extends WVerticalList {
         super.onCalculateWidgetPositions();
 
         if (moveAfterPositionWidgets) {
-            scroll = MathHelper.clamp(scroll, 0, actualHeight - height);
+            scroll = MathUtils.clamp(scroll, 0, actualHeight - height);
             targetScroll = scroll;
 
             moveCells(0, -scroll);
@@ -110,7 +111,7 @@ public abstract class WView extends WVerticalList {
             //scroll += Math.round(theme.scale(mouseDelta + mouseDelta * ((height / actualHeight) * 0.7627725)));
             //scroll += Math.round(theme.scale(mouseDelta * (1 / (height / actualHeight))));
             scroll += Math.round(mouseDelta * ((actualHeight - handleHeight() / 2) / height)); // TODO: Someone improve this
-            scroll = MathHelper.clamp(scroll, 0, actualHeight - height);
+            scroll = MathUtils.clamp(scroll, 0, actualHeight - height);
 
             targetScroll = scroll;
 
@@ -123,7 +124,7 @@ public abstract class WView extends WVerticalList {
     public boolean onMouseScrolled(double amount) {
         if (!scrollOnlyWhenMouseOver || mouseOver) {
             targetScroll -= Math.round(theme.scale(amount * 40));
-            targetScroll = MathHelper.clamp(targetScroll, 0, actualHeight - height);
+            targetScroll = MathUtils.clamp(targetScroll, 0, actualHeight - height);
             return true;
         }
 
@@ -155,7 +156,7 @@ public abstract class WView extends WVerticalList {
             if (scroll < targetScroll) scroll = targetScroll;
         }
 
-        scroll = MathHelper.clamp(scroll, 0, max);
+        scroll = MathUtils.clamp(scroll, 0, max);
 
         double change = scroll - preScroll;
         if (change != 0) moveCells(0, -change);

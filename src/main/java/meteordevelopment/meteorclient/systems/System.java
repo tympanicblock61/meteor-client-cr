@@ -5,16 +5,23 @@
 
 package meteordevelopment.meteorclient.systems;
 
+import com.github.puzzle.game.items.data.DataTagManifest;
+import finalforeach.cosmicreach.savelib.crbin.CRBinDeserializer;
+import finalforeach.cosmicreach.savelib.crbin.CRBinSerializer;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.utils.files.StreamUtils;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.util.crash.CrashException;
-import org.apache.commons.io.FilenameUtils;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtIo;
+//import net.minecraft.util.crash.CrashException;
+//import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -41,12 +48,16 @@ public abstract class System<T> implements ISerializable<T> {
         File file = getFile();
         if (file == null) return;
 
-        NbtCompound tag = toTag();
+        DataTagManifest tag = toTag();
         if (tag == null) return;
 
         try {
+            CRBinSerializer cr = CRBinSerializer.getNew();
+            tag.write(cr);
             File tempFile = File.createTempFile(MeteorClient.MOD_ID, file.getName());
-            NbtIo.write(tag, tempFile.toPath());
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                fos.write(cr.toBytes());
+            }
 
             if (folder != null) file = new File(folder, file.getName());
 
@@ -70,16 +81,36 @@ public abstract class System<T> implements ISerializable<T> {
             if (folder != null) file = new File(folder, file.getName());
 
             if (file.exists()) {
-                try {
-                    fromTag(NbtIo.read(file.toPath()));
-                } catch (CrashException e) {
-                    String backupName = FilenameUtils.removeExtension(file.getName()) + "-" + ZonedDateTime.now().format(DATE_TIME_FORMATTER) + ".backup.nbt";
-                    File backup = new File(file.getParentFile(), backupName);
-                    StreamUtils.copy(file, backup);
-                    MeteorClient.LOG.error("Error loading {}. Possibly corrupted?", this.name);
-                    MeteorClient.LOG.info("Saved settings backup to '{}'.", backup);
-                    e.printStackTrace();
-                }
+//                try {
+                    CRBinDeserializer cr = CRBinDeserializer.getNew();
+
+                    try (FileInputStream fis = new FileInputStream(file);
+                         FileChannel fileChannel = fis.getChannel()) {
+
+                        // Get the file size
+                        long fileSize = fileChannel.size();
+
+                        // Allocate a ByteBuffer with the size of the file
+                        ByteBuffer buffer = ByteBuffer.allocate((int) fileSize);
+
+                        // Read the file's content into the ByteBuffer
+                        fileChannel.read(buffer);
+
+                        // Flip the buffer for reading
+                        buffer.flip();
+                        cr.prepareForRead(buffer);
+                        DataTagManifest tag = new DataTagManifest();
+                        tag.read(cr);
+                        fromTag(tag);
+                    }
+//                } catch (CrashException e) {
+//                    String backupName = FilenameUtils.removeExtension(file.getName()) + "-" + ZonedDateTime.now().format(DATE_TIME_FORMATTER) + ".backup.nbt";
+//                    File backup = new File(file.getParentFile(), backupName);
+//                    StreamUtils.copy(file, backup);
+//                    MeteorClient.LOG.error("Error loading {}. Possibly corrupted?", this.name);
+//                    MeteorClient.LOG.info("Saved settings backup to '{}'.", backup);
+//                    e.printStackTrace();
+//                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -99,12 +130,12 @@ public abstract class System<T> implements ISerializable<T> {
     }
 
     @Override
-    public NbtCompound toTag() {
+    public DataTagManifest toTag() {
         return null;
     }
 
     @Override
-    public T fromTag(NbtCompound tag) {
+    public T fromTag(DataTagManifest tag) {
         return null;
     }
 }

@@ -5,10 +5,15 @@
 
 package meteordevelopment.meteorclient.utils.render.color;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Style;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Formatting;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.text.Style;
+//import net.minecraft.text.TextColor;
+//import net.minecraft.util.Formatting;
+
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.BooleanDataAttribute;
+import com.github.puzzle.game.items.data.attributes.IntDataAttribute;
 
 public class SettingColor extends Color {
     public boolean rainbow;
@@ -51,17 +56,17 @@ public class SettingColor extends Color {
         super(color);
     }
 
-    public SettingColor(Formatting formatting) {
-        super(formatting);
-    }
-
-    public SettingColor(TextColor textColor) {
-        super(textColor);
-    }
-
-    public SettingColor(Style style) {
-        super(style);
-    }
+//    public SettingColor(Formatting formatting) {
+//        super(formatting);
+//    }
+//
+//    public SettingColor(TextColor textColor) {
+//        super(textColor);
+//    }
+//
+//    public SettingColor(Style style) {
+//        super(style);
+//    }
 
     public SettingColor rainbow(boolean rainbow) {
         this.rainbow = rainbow;
@@ -86,16 +91,16 @@ public class SettingColor extends Color {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = super.toTag();
-        tag.putBoolean("rainbow", rainbow);
+    public DataTagManifest toTag() {
+        DataTagManifest tag = super.toTag();
+        tag.addTag(new DataTag<>("rainbow", new BooleanDataAttribute(rainbow)));
         return tag;
     }
 
     @Override
-    public SettingColor fromTag(NbtCompound tag) {
+    public SettingColor fromTag(DataTagManifest tag) {
         super.fromTag(tag);
-        rainbow = tag.getBoolean("rainbow");
+        rainbow = tag.getTag("rainbow").getTagAsType(Boolean.TYPE).getValue();
         return this;
     }
 

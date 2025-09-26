@@ -5,16 +5,21 @@
 
 package meteordevelopment.meteorclient.events.packets;
 
+import com.github.puzzle.game.networking.packet.NetworkHandler;
+import finalforeach.cosmicreach.networking.GamePacket;
+import finalforeach.cosmicreach.networking.client.ClientNetworkManager;
+import finalforeach.cosmicreach.networking.client.netty.NettyClient;
 import meteordevelopment.meteorclient.events.Cancellable;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.packet.Packet;
+import org.checkerframework.checker.units.qual.N;
+//import net.minecraft.network.ClientConnection;
+//import net.minecraft.network.packet.Packet;
 
 public class PacketEvent {
     public static class Receive extends Cancellable {
-        public Packet<?> packet;
-        public ClientConnection connection;
+        public GamePacket packet;
+        public NettyClient connection;
 
-        public Receive(Packet<?> packet, ClientConnection connection) {
+        public Receive(GamePacket packet, NettyClient connection) {
             this.setCancelled(false);
             this.packet = packet;
             this.connection = connection;
@@ -22,10 +27,10 @@ public class PacketEvent {
     }
 
     public static class Send extends Cancellable {
-        public Packet<?> packet;
-        public ClientConnection connection;
+        public GamePacket packet;
+        public NettyClient connection;
 
-        public Send(Packet<?> packet, ClientConnection connection) {
+        public Send(GamePacket packet, NettyClient connection) {
             this.setCancelled(false);
             this.packet = packet;
             this.connection = connection;
@@ -33,10 +38,10 @@ public class PacketEvent {
     }
 
     public static class Sent {
-        public Packet<?> packet;
-        public ClientConnection connection;
+        public GamePacket packet;
+        public NettyClient connection;
 
-        public Sent(Packet<?> packet, ClientConnection connection) {
+        public Sent(GamePacket packet, NettyClient connection) {
             this.packet = packet;
             this.connection = connection;
         }

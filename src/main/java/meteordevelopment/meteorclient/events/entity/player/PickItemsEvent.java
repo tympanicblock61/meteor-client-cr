@@ -5,7 +5,9 @@
 
 package meteordevelopment.meteorclient.events.entity.player;
 
-import net.minecraft.item.ItemStack;
+//import net.minecraft.item.ItemStack;
+
+import finalforeach.cosmicreach.items.ItemStack;
 
 public class PickItemsEvent {
     private static final PickItemsEvent INSTANCE = new PickItemsEvent();

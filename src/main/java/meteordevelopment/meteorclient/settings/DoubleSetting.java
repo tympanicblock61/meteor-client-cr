@@ -5,7 +5,10 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.nbt.NbtCompound;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DoubleDataAttribute;
+//import net.minecraft.nbt.NbtCompound;
 
 import java.util.function.Consumer;
 
@@ -18,7 +21,6 @@ public class DoubleSetting extends Setting<Double> {
 
     private DoubleSetting(String name, String description, double defaultValue, Consumer<Double> onChanged, Consumer<Setting<Double>> onModuleActivated, IVisible visible, double min, double max, double sliderMin, double sliderMax, boolean onSliderRelease, int decimalPlaces, boolean noSlider) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
-
         this.min = min;
         this.max = max;
         this.sliderMin = sliderMin;
@@ -43,16 +45,14 @@ public class DoubleSetting extends Setting<Double> {
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        tag.putDouble("value", get());
-
+    protected DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new DoubleDataAttribute(get())));
         return tag;
     }
 
     @Override
-    public Double load(NbtCompound tag) {
-        set(tag.getDouble("value"));
-
+    public Double load(DataTagManifest tag) {
+        set(tag.getTag("value").getTagAsType(Double.TYPE).getValue());
         return get();
     }
 

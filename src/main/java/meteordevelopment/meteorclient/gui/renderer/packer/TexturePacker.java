@@ -5,9 +5,13 @@
 
 package meteordevelopment.meteorclient.gui.renderer.packer;
 
-import com.mojang.blaze3d.platform.TextureUtil;
+//import com.mojang.blaze3d.platform.TextureUtil;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.github.puzzle.game.resources.PuzzleGameAssetLoader;
+import finalforeach.cosmicreach.util.Identifier;
+import meteordevelopment.meteorclient.renderer.Texture;
 import meteordevelopment.meteorclient.utils.render.ByteTexture;
-import net.minecraft.util.Identifier;
+//import net.minecraft.util.Identifier;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.stb.STBImageResize;
@@ -19,10 +23,12 @@ import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class TexturePacker {
     private static final int maxWidth = 2048;
@@ -30,47 +36,43 @@ public class TexturePacker {
     private final List<Image> images = new ArrayList<>();
 
     public GuiTexture add(Identifier id) {
-        try {
-            InputStream in = mc.getResourceManager().getResource(id).get().getInputStream();
-            GuiTexture texture = new GuiTexture();
 
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                ByteBuffer rawImageBuffer = null;
+        InputStream in = PuzzleGameAssetLoader.locateAsset(id).read();
+        GuiTexture texture = new GuiTexture();
 
-                try {
-                    rawImageBuffer = TextureUtil.readResource(in);
-                    ((Buffer) rawImageBuffer).rewind();
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer rawImageBuffer = null;
 
-                    IntBuffer w = stack.mallocInt(1);
-                    IntBuffer h = stack.mallocInt(1);
-                    IntBuffer ignored = stack.mallocInt(1);
+            try {
+                rawImageBuffer = toByteBuffer(in);
+                ((Buffer) rawImageBuffer).rewind();
 
-                    ByteBuffer imageBuffer = STBImage.stbi_load_from_memory(rawImageBuffer, w, h, ignored, 4);
+                IntBuffer w = stack.mallocInt(1);
+                IntBuffer h = stack.mallocInt(1);
+                IntBuffer ignored = stack.mallocInt(1);
 
-                    int width = w.get(0);
-                    int height = h.get(0);
+                ByteBuffer imageBuffer = STBImage.stbi_load_from_memory(rawImageBuffer, w, h, ignored, 4);
 
-                    TextureRegion region = new TextureRegion(width, height);
-                    texture.add(region);
+                int width = w.get(0);
+                int height = h.get(0);
 
-                    images.add(new Image(imageBuffer, region, width, height, true));
+                TextureRegion region = new TextureRegion(width, height);
+                texture.add(region);
 
-                    if (width > 20) addResized(texture, imageBuffer, width, height, 20);
-                    if (width > 32) addResized(texture, imageBuffer, width, height, 32);
-                    if (width > 48) addResized(texture, imageBuffer, width, height, 48);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    MemoryUtil.memFree(rawImageBuffer);
-                }
+                images.add(new Image(imageBuffer, region, width, height, true));
+
+                if (width > 20) addResized(texture, imageBuffer, width, height, 20);
+                if (width > 32) addResized(texture, imageBuffer, width, height, 32);
+                if (width > 48) addResized(texture, imageBuffer, width, height, 48);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                MemoryUtil.memFree(rawImageBuffer);
             }
-
-            return texture;
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-        return null;
+        return texture;
+
     }
 
     private void addResized(GuiTexture texture, ByteBuffer srcImageBuffer, int srcWidth, int srcHeight, int width) {
@@ -139,7 +141,7 @@ public class TexturePacker {
         }
 
         ((Buffer) buffer).rewind();
-        return new ByteTexture(width, height, buffer, ByteTexture.Format.RGBA, ByteTexture.Filter.Linear, ByteTexture.Filter.Linear);
+        return new ByteTexture(width, height, buffer, Pixmap.Format.RGBA8888, ByteTexture.Filter.Linear, ByteTexture.Filter.Linear);
     }
 
     private static class Image {
@@ -162,6 +164,22 @@ public class TexturePacker {
 
         public void free() {
             if (stb) STBImage.stbi_image_free(buffer);
+        }
+    }
+
+    public static ByteBuffer toByteBuffer(InputStream inputStream) throws IOException {
+        try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
+            ByteBuffer buffer = ByteBuffer.allocateDirect(8192);
+            while (channel.read(buffer) != -1) {
+                if (!buffer.hasRemaining()) {
+                    ByteBuffer newBuffer = ByteBuffer.allocateDirect(buffer.capacity() * 2);
+                    buffer.flip();
+                    newBuffer.put(buffer);
+                    buffer = newBuffer;
+                }
+            }
+            buffer.flip();
+            return buffer;
         }
     }
 }

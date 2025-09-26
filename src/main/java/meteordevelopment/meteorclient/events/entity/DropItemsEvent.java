@@ -5,8 +5,9 @@
 
 package meteordevelopment.meteorclient.events.entity;
 
+import finalforeach.cosmicreach.items.ItemStack;
 import meteordevelopment.meteorclient.events.Cancellable;
-import net.minecraft.item.ItemStack;
+//import net.minecraft.item.ItemStack;
 
 public class DropItemsEvent extends Cancellable {
     private static final DropItemsEvent INSTANCE = new DropItemsEvent();

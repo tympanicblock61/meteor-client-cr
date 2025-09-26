@@ -5,29 +5,44 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.core.loader.util.Reflection;
+import com.github.puzzle.core.registries.GenericRegistry;
+import com.github.puzzle.core.registries.IRegistry;
+import com.github.puzzle.core.registries.MapRegistry;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.util.Identifier;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+//import net.minecraft.entity.EntityType;
+//import net.minecraft.entity.SpawnGroup;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtString;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.util.Identifier;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import finalforeach.cosmicreach.entities.Entity;
+import org.reflections.Reflections;
+
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
-    public final Predicate<EntityType<?>> filter;
-    private List<String> suggestions;
-    private final static List<String> groups = List.of("animal", "wateranimal", "monster", "ambient", "misc");
+public class EntityTypeListSetting extends Setting<Set<Class<? extends Entity>>> {
+    static {
+        addEntities();
+    }
 
-    public EntityTypeListSetting(String name, String description, Set<EntityType<?>> defaultValue, Consumer<Set<EntityType<?>>> onChanged, Consumer<Setting<Set<EntityType<?>>>> onModuleActivated, IVisible visible, Predicate<EntityType<?>> filter) {
+    public final Predicate<Class<? extends Entity>> filter;
+    private List<String> suggestions;
+    //private final static List<String> groups = List.of("animal", "wateranimal", "monster", "ambient", "misc");
+
+    public EntityTypeListSetting(String name, String description, Set<Class<? extends Entity>> defaultValue, Consumer<Set<Class<? extends Entity>>> onChanged, Consumer<Setting<Set<Class<? extends Entity>>>> onModuleActivated, IVisible visible, Predicate<Class<? extends Entity>> filter) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
 
         this.filter = filter;
@@ -39,40 +54,26 @@ public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
     }
 
     @Override
-    protected Set<EntityType<?>> parseImpl(String str) {
+    protected Set<Class<? extends Entity>> parseImpl(String str) {
         String[] values = str.split(",");
-        Set<EntityType<?>> entities = new ObjectOpenHashSet<>(values.length);
+        Set<Class<? extends Entity>> entities = new ObjectOpenHashSet<>(values.length);
+        Set<Class<? extends Entity>> entitiesSubClasses = null;
 
         try {
             for (String value : values) {
-                EntityType<?> entity = parseId(Registries.ENTITY_TYPE, value);
+                Class<? extends Entity> entity = EntityRegistry.get(Identifier.of(value));
                 if (entity != null) entities.add(entity);
                 else {
-                    String lowerValue = value.trim().toLowerCase();
-                    if (!groups.contains(lowerValue)) continue;
-
-                    for (EntityType<?> entityType : Registries.ENTITY_TYPE) {
-                        if (filter != null && !filter.test(entityType)) continue;
-
-                        switch (lowerValue) {
-                            case "animal" -> {
-                                if (entityType.getSpawnGroup() == SpawnGroup.CREATURE) entities.add(entityType);
-                            }
-                            case "wateranimal" -> {
-                                if (entityType.getSpawnGroup() == SpawnGroup.WATER_AMBIENT
-                                    || entityType.getSpawnGroup() == SpawnGroup.WATER_CREATURE
-                                    || entityType.getSpawnGroup() == SpawnGroup.UNDERGROUND_WATER_CREATURE
-                                    || entityType.getSpawnGroup() == SpawnGroup.AXOLOTLS) entities.add(entityType);
-                            }
-                            case "monster" -> {
-                                if (entityType.getSpawnGroup() == SpawnGroup.MONSTER) entities.add(entityType);
-                            }
-                            case "ambient" -> {
-                                if (entityType.getSpawnGroup() == SpawnGroup.AMBIENT) entities.add(entityType);
-                            }
-                            case "misc" -> {
-                                if (entityType.getSpawnGroup() == SpawnGroup.MISC) entities.add(entityType);
-                            }
+                    if (entitiesSubClasses == null) {
+                        Reflections reflections = new Reflections(Entity.class.getPackage().toString());
+                        entitiesSubClasses=reflections.getSubTypesOf(Entity.class);
+                    }
+                    for (Class<? extends Entity> entity_ : entitiesSubClasses) {
+                        String id = getIdentifier(entity_);
+                        if (id.equals(value)) {
+                            EntityRegistry.store(Identifier.of(getIdentifier(entity_)), entity_);
+                            entities.add(entity_);
+                            break;
                         }
                     }
                 }
@@ -83,16 +84,16 @@ public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
     }
 
     @Override
-    protected boolean isValueValid(Set<EntityType<?>> value) {
+    protected boolean isValueValid(Set<Class<? extends Entity>> value) {
         return true;
     }
 
     @Override
     public List<String> getSuggestions() {
         if (suggestions == null) {
-            suggestions = new ArrayList<>(groups);
-            for (EntityType<?> entityType : Registries.ENTITY_TYPE) {
-                if (filter == null || filter.test(entityType)) suggestions.add(Registries.ENTITY_TYPE.getId(entityType).toString());
+            suggestions = new ArrayList<>();
+            for (Class<? extends Entity> entityType : EntityRegistry) {
+                if (filter == null || filter.test(entityType)) suggestions.add(getIdentifier(entityType));
             }
         }
 
@@ -100,37 +101,36 @@ public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        NbtList valueTag = new NbtList();
-        for (EntityType<?> entityType : get()) {
-            valueTag.add(NbtString.of(Registries.ENTITY_TYPE.getId(entityType).toString()));
+    public DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<StringDataAttribute> valueTag = new ListDataAttribute<>();
+        List<StringDataAttribute> list_ = new ArrayList<>();
+        for (Class<? extends Entity> entityType : get()) {
+            list_.add(new StringDataAttribute(getIdentifier(entityType)));
         }
-        tag.put("value", valueTag);
-
+        valueTag.setValue(list_);
+        tag.addTag(new DataTag<>("value", valueTag));
         return tag;
     }
 
     @Override
-    public Set<EntityType<?>> load(NbtCompound tag) {
+    public Set<Class<? extends Entity>> load(DataTagManifest tag) {
         get().clear();
-
-        NbtList valueTag = tag.getList("value", 8);
-        for (NbtElement tagI : valueTag) {
-            EntityType<?> type = Registries.ENTITY_TYPE.get(Identifier.of(tagI.asString()));
+        List<StringDataAttribute> valueTag = tag.getTag("value").getTagAsType((Class<List<StringDataAttribute>>) (Class<?>) List.class).getValue();
+        for (StringDataAttribute tagI : valueTag) {
+            Class<? extends Entity> type = EntityRegistry.get(Identifier.of(tagI.getValue()));
             if (filter == null || filter.test(type)) get().add(type);
         }
-
         return get();
     }
 
-    public static class Builder extends SettingBuilder<Builder, Set<EntityType<?>>, EntityTypeListSetting> {
-        private Predicate<EntityType<?>> filter;
+    public static class Builder extends SettingBuilder<Builder, Set<Class<? extends Entity>>, EntityTypeListSetting> {
+        private Predicate<Class<? extends Entity>> filter;
 
         public Builder() {
             super(new ObjectOpenHashSet<>(0));
         }
 
-        public Builder defaultValue(EntityType<?>... defaults) {
+        public Builder defaultValue(Class<? extends Entity>... defaults) {
             return defaultValue(defaults != null ? new ObjectOpenHashSet<>(defaults) : new ObjectOpenHashSet<>(0));
         }
 
@@ -139,7 +139,7 @@ public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
             return this;
         }
 
-        public Builder filter(Predicate<EntityType<?>> filter){
+        public Builder filter(Predicate<Class<? extends Entity>> filter){
             this.filter = filter;
             return this;
         }
@@ -147,6 +147,25 @@ public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
         @Override
         public EntityTypeListSetting build() {
             return new EntityTypeListSetting(name, description, defaultValue, onChanged, onModuleActivated, visible, filter);
+        }
+    }
+
+    private static final IRegistry<Class<? extends Entity>> EntityRegistry = new MapRegistry<>(Identifier.of("meteor", "entities"), new HashMap<>(), true, true);
+
+    private static void addEntities() {
+        Reflections reflections = new Reflections(Entity.class.getPackage().toString());
+        Set<Class<? extends Entity>> entities = reflections.getSubTypesOf(Entity.class);
+        for (Class<? extends Entity> entity : entities) {
+            EntityRegistry.store(Identifier.of(getIdentifier(entity)), entity);
+        }
+    }
+
+    private static String getIdentifier(Class<? extends Entity> entity) {
+        try {
+            Field entityTypeField = entity.getDeclaredField("ENTITY_TYPE_ID");
+            return (String) entityTypeField.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {
+            return entity.getName();
         }
     }
 }

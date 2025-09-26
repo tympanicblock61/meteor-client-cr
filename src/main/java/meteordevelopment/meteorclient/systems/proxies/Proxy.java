@@ -5,11 +5,14 @@
 
 package meteordevelopment.meteorclient.systems.proxies;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
 
 import java.util.Objects;
 
@@ -72,8 +75,8 @@ public class Proxy implements ISerializable<Proxy> {
     );
 
     private Proxy() {}
-    public Proxy(NbtElement tag) {
-        fromTag((NbtCompound) tag);
+    public Proxy(DataTagManifest tag) {
+        fromTag(tag);
     }
 
     public boolean resolveAddress() {
@@ -133,20 +136,17 @@ public class Proxy implements ISerializable<Proxy> {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-
-        tag.put("settings", settings.toTag());
-
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("settings", new DataTagManifestAttribute(settings.toTag())));
         return tag;
     }
 
     @Override
-    public Proxy fromTag(NbtCompound tag) {
-        if (tag.contains("settings")) {
-            settings.fromTag(tag.getCompound("settings"));
+    public Proxy fromTag(DataTagManifest tag) {
+        if (tag.hasTag("settings")) {
+            settings.fromTag(tag.getTag("settings").getTagAsType(DataTagManifest.class).getValue());
         }
-
         return this;
     }
 

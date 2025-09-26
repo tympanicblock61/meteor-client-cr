@@ -5,59 +5,59 @@
 
 package meteordevelopment.meteorclient.utils.player;
 
-import com.mojang.brigadier.StringReader;
-import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.mixininterface.IChatHud;
-import meteordevelopment.meteorclient.pathing.BaritoneUtils;
-import meteordevelopment.meteorclient.systems.config.Config;
+import com.badlogic.gdx.math.Vector3;
+import com.github.puzzle.util.MutablePair;
+import finalforeach.cosmicreach.ClientSingletons;
+import finalforeach.cosmicreach.GameSingletons;
+import finalforeach.cosmicreach.accounts.AccountOffline;
+import finalforeach.cosmicreach.chat.Chat;
+import finalforeach.cosmicreach.gamestates.ChatMenu;
+import finalforeach.cosmicreach.networking.client.ChatSender;
+import meteordevelopment.meteorclient.mixins.AccessorChatMenu;
 import meteordevelopment.meteorclient.utils.PostInit;
-import meteordevelopment.meteorclient.utils.misc.text.MeteorClickEvent;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Pair;
-import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.client;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class ChatUtils {
-    private static final List<Pair<String, Supplier<Text>>> customPrefixes = new ArrayList<>();
+    private static final AccountOffline MeteorAccount = new AccountOffline();
+    private static final List<MutablePair<String, Supplier<String>>> customPrefixes = new ArrayList<>();
     private static String forcedPrefixClassName;
+    private static String PREFIX;
 
-    private static Text PREFIX;
+    static {
+        MeteorAccount.setDisplayName("Meteor");
+    }
 
     private ChatUtils() {
     }
 
     @PostInit
     public static void init() {
-        PREFIX = Text.empty()
-            .setStyle(Style.EMPTY.withFormatting(Formatting.GRAY))
-            .append("[")
-            .append(Text.literal("Meteor").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(MeteorClient.ADDON.color.getPacked()))))
-            .append("] ");
+        PREFIX = "["+"Meteor"+"] ";
     }
 
-    public static Text getMeteorPrefix() {
+    public static String getMeteorPrefix() {
         return PREFIX;
     }
 
     /**
      * Registers a custom prefix to be used when calling from a class in the specified package. When null is returned from the supplier the default Meteor prefix is used.
      */
-    public static void registerCustomPrefix(String packageName, Supplier<Text> supplier) {
-        for (Pair<String, Supplier<Text>> pair : customPrefixes) {
+    public static void registerCustomPrefix(String packageName, Supplier<String> supplier) {
+        for (MutablePair<String, Supplier<String>> pair : customPrefixes) {
             if (pair.getLeft().equals(packageName)) {
-                pair.setRight(supplier);
+                pair.b = supplier;
                 return;
             }
         }
 
-        customPrefixes.add(new Pair<>(packageName, supplier));
+        customPrefixes.add(new MutablePair<>(packageName, supplier));
     }
 
     /**
@@ -77,99 +77,78 @@ public class ChatUtils {
      * Sends the message as if the user typed it into chat.
      */
     public static void sendPlayerMsg(String message) {
-        mc.inGameHud.getChatHud().addToMessageHistory(message);
+        ChatSender.sendMessageOrCommand(Chat.MAIN_CLIENT_CHAT, ClientSingletons.ACCOUNT, message);
+        AccessorChatMenu.getMyChat().addMessage(ClientSingletons.ACCOUNT, message);
 
-        if (message.startsWith("/")) mc.player.networkHandler.sendChatCommand(message.substring(1));
-        else mc.player.networkHandler.sendChatMessage(message);
+        //mc.inGameHud.getChatHud().addToMessageHistory(message);
+        //if (message.startsWith("/")) mc.player.networkHandler.sendChatCommand(message.substring(1));
+        //else mc.player.networkHandler.sendChatMessage(message);
     }
 
     // Default
 
-    public static void info(String message, Object... args) {
-        sendMsg(Formatting.GRAY, message, args);
+    public static void info(String message) {
+        sendMsg(null, message);
     }
 
-    public static void infoPrefix(String prefix, String message, Object... args) {
-        sendMsg(0, prefix, Formatting.LIGHT_PURPLE, Formatting.GRAY, message, args);
+    public static void infoPrefix(String prefix, String message) {
+        sendMsg(prefix, message);
     }
 
     // Warning
 
     public static void warning(String message, Object... args) {
-        sendMsg(Formatting.YELLOW, message, args);
+        sendMsg(null, message);
     }
 
-    public static void warningPrefix(String prefix, String message, Object... args) {
-        sendMsg(0, prefix, Formatting.LIGHT_PURPLE, Formatting.YELLOW, message, args);
+    public static void warningPrefix(String prefix, String message) {
+        sendMsg(prefix, message);
     }
 
     // Error
 
-    public static void error(String message, Object... args) {
-        sendMsg(Formatting.RED, message, args);
+    public static void error(String message) {
+        sendMsg(null, message);
     }
 
-    public static void errorPrefix(String prefix, String message, Object... args) {
-        sendMsg(0, prefix, Formatting.LIGHT_PURPLE, Formatting.RED, message, args);
+    public static void errorPrefix(String prefix, String message) {
+        sendMsg(prefix, message);
     }
 
     // Misc
 
-    public static void sendMsg(Text message) {
-        sendMsg(null, message);
-    }
+    public static void sendMsg(@Nullable String prefixTitle, String msg) {
+        if (GameSingletons.world == null) return;
 
-    public static void sendMsg(String prefix, Text message) {
-        sendMsg(0, prefix, Formatting.LIGHT_PURPLE, message);
-    }
-
-    public static void sendMsg(Formatting color, String message, Object... args) {
-        sendMsg(0, null, null, color, message, args);
-    }
-
-    public static void sendMsg(int id, Formatting color, String message, Object... args) {
-        sendMsg(id, null, null, color, message, args);
-    }
-
-    public static void sendMsg(int id, @Nullable String prefixTitle, @Nullable Formatting prefixColor, Formatting messageColor, String messageContent, Object... args) {
-        MutableText message = formatMsg(String.format(messageContent, args), messageColor);
-        sendMsg(id, prefixTitle, prefixColor, message);
-    }
-
-    public static void sendMsg(int id, @Nullable String prefixTitle, @Nullable Formatting prefixColor, String messageContent, Formatting messageColor) {
-        MutableText message = formatMsg(messageContent, messageColor);
-        sendMsg(id, prefixTitle, prefixColor, message);
-    }
-
-    public static void sendMsg(int id, @Nullable String prefixTitle, @Nullable Formatting prefixColor, Text msg) {
-        if (mc.world == null) return;
-
-        MutableText message = Text.empty();
+        StringBuilder message = new StringBuilder(msg);
         message.append(getPrefix());
-        if (prefixTitle != null) message.append(getCustomPrefix(prefixTitle, prefixColor));
+        if (prefixTitle != null) message.append(getCustomPrefix(prefixTitle));
         message.append(msg);
 
-        if (!Config.get().deleteChatFeedback.get()) id = 0;
+//        if (!Config.get().deleteChatFeedback.get()) id = 0;
 
-        ((IChatHud) mc.inGameHud.getChatHud()).meteor$add(message, id);
+//        ((IChatHud) mc.inGameHud.getChatHud()).meteor$add(message, id);
+
+
+        AccessorChatMenu.getMyChat().addMessage(MeteorAccount, message.toString());
     }
 
-    private static MutableText getCustomPrefix(String prefixTitle, Formatting prefixColor) {
-        MutableText prefix = Text.empty();
-        prefix.setStyle(prefix.getStyle().withFormatting(Formatting.GRAY));
+    private static String getCustomPrefix(String prefixTitle) {
+        String prefix = "";
+//        prefix.setStyle(prefix.getStyle().withFormatting(Formatting.GRAY));
 
-        prefix.append("[");
+        prefix+=("[");
 
-        MutableText moduleTitle = Text.literal(prefixTitle);
-        moduleTitle.setStyle(moduleTitle.getStyle().withFormatting(prefixColor));
-        prefix.append(moduleTitle);
+//        MutableText moduleTitle = Text.literal(prefixTitle);
+//        moduleTitle.setStyle(moduleTitle.getStyle().withFormatting(prefixColor));
+        prefix+=(prefixTitle);
 
-        prefix.append("] ");
+        prefix+=("] ");
 
         return prefix;
     }
 
-    private static Text getPrefix() {
+    private static String getPrefix() {
         if (customPrefixes.isEmpty()) {
             forcedPrefixClassName = null;
             return PREFIX;
@@ -196,9 +175,9 @@ public class ChatUtils {
 
         if (className == null) return PREFIX;
 
-        for (Pair<String, Supplier<Text>> pair : customPrefixes) {
+        for (MutablePair<String, Supplier<String>> pair : customPrefixes) {
             if (className.startsWith(pair.getLeft())) {
-                Text prefix = pair.getRight().get();
+                String prefix = pair.getRight().get();
                 return prefix != null ? prefix : PREFIX;
             }
         }
@@ -206,69 +185,9 @@ public class ChatUtils {
         return PREFIX;
     }
 
-    private static MutableText formatMsg(String message, Formatting defaultColor) {
-        StringReader reader = new StringReader(message);
-        MutableText text = Text.empty();
-        Style style = Style.EMPTY.withFormatting(defaultColor);
-        StringBuilder result = new StringBuilder();
-        boolean formatting = false;
-        while (reader.canRead()) {
-            char c = reader.read();
-            if (c == '(') {
-                text.append(Text.literal(result.toString()).setStyle(style));
-                result.setLength(0);
-                result.append(c);
-                formatting = true;
-            } else {
-                result.append(c);
 
-                if (formatting && c == ')') {
-                    switch (result.toString()) {
-                        case "(default)" -> {
-                            style = style.withFormatting(defaultColor);
-                            result.setLength(0);
-                        }
-                        case "(highlight)" -> {
-                            style = style.withFormatting(Formatting.WHITE);
-                            result.setLength(0);
-                        }
-                        case "(underline)" -> {
-                            style = style.withFormatting(Formatting.UNDERLINE);
-                            result.setLength(0);
-                        }
-                        case "(bold)" -> {
-                            style = style.withFormatting(Formatting.BOLD);
-                            result.setLength(0);
-                        }
-                    }
-                    formatting = false;
-                }
-            }
-        }
 
-        if (!result.isEmpty()) text.append(Text.literal(result.toString()).setStyle(style));
-
-        return text;
-    }
-
-    public static MutableText formatCoords(Vec3d pos) {
-        String coordsString = String.format("(highlight)(underline)%.0f, %.0f, %.0f(default)", pos.x, pos.y, pos.z);
-        MutableText coordsText = formatMsg(coordsString, Formatting.GRAY);
-
-        if (BaritoneUtils.IS_AVAILABLE) {
-            Style style = coordsText.getStyle().withFormatting(Formatting.BOLD)
-                .withHoverEvent(new HoverEvent(
-                    HoverEvent.Action.SHOW_TEXT,
-                    Text.literal("Set as Baritone goal")
-                ))
-                .withClickEvent(new MeteorClickEvent(
-                    ClickEvent.Action.RUN_COMMAND,
-                    String.format("%sgoto %d %d %d", BaritoneUtils.getPrefix(), (int) pos.x, (int) pos.y, (int) pos.z)
-                ));
-
-            coordsText.setStyle(style);
-        }
-
-        return coordsText;
+    public static String formatCoords(Vector3 pos) {
+        return String.format("%.0f, %.0f, %.0f", pos.x, pos.y, pos.z);
     }
 }

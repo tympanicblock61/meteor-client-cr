@@ -5,6 +5,12 @@
 
 package meteordevelopment.meteorclient.systems.modules;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.BooleanDataAttribute;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.ClientSingletons;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.addons.AddonManager;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -17,17 +23,17 @@ import meteordevelopment.meteorclient.utils.misc.ISerializable;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+//import net.minecraft.client.MinecraftClient;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.text.Text;
+//import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 public abstract class Module implements ISerializable<Module>, Comparable<Module> {
-    protected final MinecraftClient mc;
+    protected final ClientSingletons client;
 
     public final Category category;
     public final String name;
@@ -53,7 +59,7 @@ public abstract class Module implements ISerializable<Module>, Comparable<Module
     public Module(Category category, String name, String description, String... aliases) {
         if (name.contains(" ")) MeteorClient.LOG.warn("Module '{}' contains invalid characters in its name making it incompatible with Meteor Client commands.", name);
 
-        this.mc = MinecraftClient.getInstance();
+        this.client = ClientSingletons.get();
         this.category = category;
         this.name = name;
         this.title = Utils.nameToTitle(name);
@@ -109,28 +115,23 @@ public abstract class Module implements ISerializable<Module>, Comparable<Module
     public void sendToggledMsg() {
         if (Config.get().chatFeedback.get() && chatFeedback) {
             ChatUtils.forceNextPrefixClass(getClass());
-            ChatUtils.sendMsg(this.hashCode(), Formatting.GRAY, "Toggled (highlight)%s(default) %s(default).", title, isActive() ? Formatting.GREEN + "on" : Formatting.RED + "off");
+            ChatUtils.sendMsg(""+this.hashCode(), String.format("Toggled (highlight)%s(default) %s(default).", title, isActive() ? "on" : "off"));
         }
     }
 
-    public void info(Text message) {
+    public void info(String message) {
         ChatUtils.forceNextPrefixClass(getClass());
         ChatUtils.sendMsg(title, message);
     }
 
-    public void info(String message, Object... args) {
+    public void warning(String message) {
         ChatUtils.forceNextPrefixClass(getClass());
-        ChatUtils.infoPrefix(title, message, args);
+        ChatUtils.warningPrefix(title, message);
     }
 
-    public void warning(String message, Object... args) {
+    public void error(String message) {
         ChatUtils.forceNextPrefixClass(getClass());
-        ChatUtils.warningPrefix(title, message, args);
-    }
-
-    public void error(String message, Object... args) {
-        ChatUtils.forceNextPrefixClass(getClass());
-        ChatUtils.errorPrefix(title, message, args);
+        ChatUtils.errorPrefix(title, message);
     }
 
     public boolean isActive() {
@@ -142,34 +143,34 @@ public abstract class Module implements ISerializable<Module>, Comparable<Module
     }
 
     @Override
-    public NbtCompound toTag() {
+    public DataTagManifest toTag() {
         if (!serialize) return null;
-        NbtCompound tag = new NbtCompound();
+        DataTagManifest tag = new DataTagManifest();
 
-        tag.putString("name", name);
-        tag.put("keybind", keybind.toTag());
-        tag.putBoolean("toggleOnKeyRelease", toggleOnBindRelease);
-        tag.putBoolean("chatFeedback", chatFeedback);
-        tag.putBoolean("favorite", favorite);
-        tag.put("settings", settings.toTag());
-        tag.putBoolean("active", active);
+        tag.addTag(new DataTag<>("name", new StringDataAttribute(name)));
+        tag.addTag(new DataTag<>("keybind", new DataTagManifestAttribute(keybind.toTag())));
+        tag.addTag(new DataTag<>("toggleOnKeyRelease", new BooleanDataAttribute(toggleOnBindRelease)));
+        tag.addTag(new DataTag<>("chatFeedback", new BooleanDataAttribute(chatFeedback)));
+        tag.addTag(new DataTag<>("favorite", new BooleanDataAttribute(favorite)));
+        tag.addTag(new DataTag<>("settings", new DataTagManifestAttribute(settings.toTag())));
+        tag.addTag(new DataTag<>("active", new BooleanDataAttribute(active)));
 
         return tag;
     }
 
     @Override
-    public Module fromTag(NbtCompound tag) {
+    public Module fromTag(DataTagManifest tag) {
         // General
-        keybind.fromTag(tag.getCompound("keybind"));
-        toggleOnBindRelease = tag.getBoolean("toggleOnKeyRelease");
-        chatFeedback = !tag.contains("chatFeedback") || tag.getBoolean("chatFeedback");
-        favorite = tag.getBoolean("favorite");
+        keybind.fromTag(tag.getTag("keybind").getTagAsType(DataTagManifest.class).getValue());
+        toggleOnBindRelease = tag.getTag("toggleOnKeyRelease").getTagAsType(Boolean.TYPE).getValue();
+        chatFeedback = !tag.hasTag("chatFeedback") || tag.getTag("chatFeedback").getTagAsType(Boolean.TYPE).getValue();
+        favorite = tag.getTag("favorite").getTagAsType(Boolean.TYPE).getValue();
 
         // Settings
-        NbtElement settingsTag = tag.get("settings");
-        if (settingsTag instanceof NbtCompound) settings.fromTag((NbtCompound) settingsTag);
+        DataTagManifest settingsTag = tag.getTag("settings").getTagAsType(DataTagManifest.class).getValue();
+        settings.fromTag(settingsTag);
 
-        boolean active = tag.getBoolean("active");
+        boolean active = tag.getTag("active").getTagAsType(Boolean.TYPE).getValue();
         if (active != isActive()) toggle();
 
         return this;

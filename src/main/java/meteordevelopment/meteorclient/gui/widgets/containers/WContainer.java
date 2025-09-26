@@ -5,16 +5,15 @@
 
 package meteordevelopment.meteorclient.gui.widgets.containers;
 
+import com.badlogic.gdx.Gdx;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.utils.Cell;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
-import net.minecraft.client.Mouse;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static meteordevelopment.meteorclient.utils.Utils.getWindowHeight;
 
 public abstract class WContainer extends WWidget {
@@ -53,9 +52,7 @@ public abstract class WContainer extends WWidget {
     public void moveCells(double deltaX, double deltaY) {
         for (Cell<?> cell : cells) {
             cell.move(deltaX, deltaY);
-
-            Mouse mouse = mc.mouse;
-            cell.widget().mouseMoved(mouse.getX(), mouse.getY(), mouse.getX(), mouse.getY());
+            cell.widget().mouseMoved(Gdx.input.getX(), Gdx.input.getY(), Gdx.input.getX(), Gdx.input.getY());
         }
     }
 

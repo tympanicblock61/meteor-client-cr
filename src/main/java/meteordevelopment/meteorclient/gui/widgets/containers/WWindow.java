@@ -5,12 +5,13 @@
 
 package meteordevelopment.meteorclient.gui.widgets.containers;
 
+import com.badlogic.gdx.math.MathUtils;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.utils.Cell;
 import meteordevelopment.meteorclient.gui.utils.WindowConfig;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WTriangle;
-import net.minecraft.util.math.MathHelper;
+//import net.minecraft.util.math.MathHelper;
 
 import java.util.function.Consumer;
 
@@ -236,7 +237,7 @@ public abstract class WWindow extends WVerticalList {
         @Override
         public boolean render(GuiRenderer renderer, double mouseX, double mouseY, double delta) {
             animProgress += (expanded ? 1 : -1) * delta * 14;
-            animProgress = MathHelper.clamp(animProgress, 0, 1);
+            animProgress = MathUtils.clamp(animProgress, 0, 1);
 
             triangle.rotation = (1 - animProgress) * -90;
 

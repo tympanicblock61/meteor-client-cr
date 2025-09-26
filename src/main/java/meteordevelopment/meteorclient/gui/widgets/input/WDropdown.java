@@ -5,12 +5,13 @@
 
 package meteordevelopment.meteorclient.gui.widgets.input;
 
+import com.badlogic.gdx.math.MathUtils;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.utils.Cell;
 import meteordevelopment.meteorclient.gui.widgets.WRoot;
 import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
-import net.minecraft.util.math.MathHelper;
+//import net.minecraft.util.math.MathHelper;
 
 public abstract class WDropdown<T> extends WPressable {
     public Runnable action;
@@ -103,7 +104,7 @@ public abstract class WDropdown<T> extends WPressable {
         boolean render = super.render(renderer, mouseX, mouseY, delta);
 
         animProgress += (expanded ? 1 : -1) * delta * 14;
-        animProgress = MathHelper.clamp(animProgress, 0, 1);
+        animProgress = MathUtils.clamp(animProgress, 0, 1);
 
         if (!render && animProgress > 0) {
             renderer.absolutePost(() -> {

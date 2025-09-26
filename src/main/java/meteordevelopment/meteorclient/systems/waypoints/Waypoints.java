@@ -5,6 +5,11 @@
 
 package meteordevelopment.meteorclient.systems.waypoints;
 
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Texture;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.util.DataTagUtil;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.GameJoinedEvent;
 import meteordevelopment.meteorclient.events.game.GameLeftEvent;
@@ -12,16 +17,17 @@ import meteordevelopment.meteorclient.systems.System;
 import meteordevelopment.meteorclient.systems.Systems;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.files.StreamUtils;
-import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+//import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+import meteordevelopment.meteorclient.utils.misc.DataTagUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.world.Dimension;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+//import net.minecraft.client.texture.AbstractTexture;
+//import net.minecraft.client.texture.NativeImage;
+//import net.minecraft.client.texture.NativeImageBackedTexture;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -34,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Waypoints extends System<Waypoints> implements Iterable<Waypoint> {
     public static final String[] BUILTIN_ICONS = {"square", "circle", "triangle", "star", "diamond", "skull"};
 
-    public final Map<String, AbstractTexture> icons = new ConcurrentHashMap<>();
+    public final Map<String, Texture> icons = new ConcurrentHashMap<>();
 
     private final List<Waypoint> waypoints = Collections.synchronizedList(new ArrayList<>());
 
@@ -61,14 +67,9 @@ public class Waypoints extends System<Waypoints> implements Iterable<Waypoint> {
 
         for (File file : files) {
             if (file.getName().endsWith(".png")) {
-                try {
-                    String name = file.getName().replace(".png", "");
-                    AbstractTexture texture = new NativeImageBackedTexture(NativeImage.read(new FileInputStream(file)));
-                    icons.put(name, texture);
-                }
-                catch (IOException e) {
-                    MeteorClient.LOG.error("Failed to read a waypoint icon", e);
-                }
+                String name = file.getName().replace(".png", "");
+                Texture texture = new Texture(new FileHandle(file));
+                icons.put(name, texture);
             }
         }
     }
@@ -155,17 +156,18 @@ public class Waypoints extends System<Waypoints> implements Iterable<Waypoint> {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-        tag.put("waypoints", NbtUtils.listToTag(waypoints));
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("waypoints", DataTagUtils.listToTag(waypoints)));
         return tag;
     }
 
     @Override
-    public Waypoints fromTag(NbtCompound tag) {
+    public Waypoints fromTag(DataTagManifest tag) {
         waypoints.clear();
 
-        for (NbtElement waypointTag : tag.getList("waypoints", 10)) {
+
+        for (DataTagManifest waypointTag : tag.getTag("waypoints").getTagAsType((Class<List<DataTagManifest>>) (Class<?>) List.class).getValue()) {
             waypoints.add(new Waypoint(waypointTag));
         }
 

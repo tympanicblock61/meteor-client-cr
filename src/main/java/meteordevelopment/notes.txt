@@ -1,0 +1,2 @@
+ChallengeLoginPacket uses clients disconnect when not authenticated, can bypass using a mixin
+could abuse RespawnPacket because it sends a packet to all connected players

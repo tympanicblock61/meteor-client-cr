@@ -5,8 +5,9 @@
 
 package meteordevelopment.meteorclient.events.world;
 
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import meteordevelopment.meteorclient.events.Cancellable;
-import net.minecraft.particle.ParticleEffect;
+//import net.minecraft.particle.ParticleEffect;
 
 public class ParticleEvent extends Cancellable {
     private static final ParticleEvent INSTANCE = new ParticleEvent();

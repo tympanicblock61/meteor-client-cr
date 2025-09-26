@@ -5,7 +5,9 @@
 
 package meteordevelopment.meteorclient.events.entity;
 
-import net.minecraft.entity.Entity;
+//import net.minecraft.entity.Entity;
+
+import finalforeach.cosmicreach.entities.Entity;
 
 public class EntityAddedEvent {
     private static final EntityAddedEvent INSTANCE = new EntityAddedEvent();

@@ -5,8 +5,9 @@
 
 package meteordevelopment.meteorclient.events.entity.player;
 
+import finalforeach.cosmicreach.entities.Entity;
 import meteordevelopment.meteorclient.events.Cancellable;
-import net.minecraft.entity.Entity;
+//import net.minecraft.entity.Entity;
 
 public class AttackEntityEvent extends Cancellable {
     private static final AttackEntityEvent INSTANCE = new AttackEntityEvent();

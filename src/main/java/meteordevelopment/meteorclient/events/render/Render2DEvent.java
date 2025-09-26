@@ -5,19 +5,20 @@
 
 package meteordevelopment.meteorclient.events.render;
 
+import com.badlogic.gdx.graphics.g2d.Batch;
 import meteordevelopment.meteorclient.utils.Utils;
-import net.minecraft.client.gui.DrawContext;
+//import net.minecraft.client.gui.DrawContext;
 
 public class Render2DEvent {
     private static final Render2DEvent INSTANCE = new Render2DEvent();
 
-    public DrawContext drawContext;
+    public Batch batch;
     public int screenWidth, screenHeight;
     public double frameTime;
     public float tickDelta;
 
-    public static Render2DEvent get(DrawContext drawContext, int screenWidth, int screenHeight, float tickDelta) {
-        INSTANCE.drawContext = drawContext;
+    public static Render2DEvent get(Batch batch, int screenWidth, int screenHeight, float tickDelta) {
+        INSTANCE.batch = batch;
         INSTANCE.screenWidth = screenWidth;
         INSTANCE.screenHeight = screenHeight;
         INSTANCE.frameTime = Utils.frameTime;

@@ -5,41 +5,50 @@
 
 package meteordevelopment.meteorclient.utils.entity;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector3;
+import finalforeach.cosmicreach.entities.Entity;
+import finalforeach.cosmicreach.entities.player.Player;
+import finalforeach.cosmicreach.entities.player.PlayerEntity;
+import finalforeach.cosmicreach.world.Zone;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import meteordevelopment.meteorclient.mixins.AccessorEntity;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.AttributeModifiersComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.*;
-import net.minecraft.entity.attribute.*;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.registry.tag.EntityTypeTags;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.Heightmap;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.explosion.Explosion;
+//import net.minecraft.block.BlockState;
+//import net.minecraft.block.Blocks;
+//import net.minecraft.component.DataComponentTypes;
+//import net.minecraft.component.type.AttributeModifiersComponent;
+//import net.minecraft.enchantment.Enchantment;
+//import net.minecraft.enchantment.Enchantments;
+//import net.minecraft.entity.*;
+//import net.minecraft.entity.attribute.*;
+//import net.minecraft.entity.damage.DamageSource;
+//import net.minecraft.entity.effect.StatusEffectInstance;
+//import net.minecraft.entity.effect.StatusEffects;
+//import net.minecraft.entity.player.PlayerEntity;
+//import net.minecraft.item.*;
+//import net.minecraft.registry.entry.RegistryEntry;
+//import net.minecraft.registry.tag.DamageTypeTags;
+//import net.minecraft.registry.tag.EntityTypeTags;
+//import net.minecraft.server.world.ServerWorld;
+//import net.minecraft.util.hit.BlockHitResult;
+//import net.minecraft.util.hit.HitResult;
+//import net.minecraft.util.math.*;
+//import net.minecraft.world.BlockView;
+//import net.minecraft.world.GameMode;
+//import net.minecraft.world.Heightmap;
+//import net.minecraft.world.RaycastContext;
+//import net.minecraft.world.explosion.Explosion;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiFunction;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static meteordevelopment.meteorclient.MeteorClient.client;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
+import finalforeach.cosmicreach.entities.components.PlayerFallDamage;
 
 public class DamageUtils {
     private DamageUtils() {
@@ -59,24 +68,12 @@ public class DamageUtils {
         return blockState.getCollisionShape(mc.world, blockPos).raycast(context.start(), context.end(), blockPos);
     };
 
-    public static float crystalDamage(LivingEntity target, Vec3d targetPos, Box targetBox, Vec3d explosionPos, RaycastFactory raycastFactory) {
-        return explosionDamage(target, targetPos, targetBox, explosionPos, 12f, raycastFactory);
-    }
-
-    public static float bedDamage(LivingEntity target, Vec3d targetPos, Box targetBox, Vec3d explosionPos, RaycastFactory raycastFactory) {
-        return explosionDamage(target, targetPos, targetBox, explosionPos, 10f, raycastFactory);
-    }
-
-    public static float anchorDamage(LivingEntity target, Vec3d targetPos, Box targetBox, Vec3d explosionPos, RaycastFactory raycastFactory) {
-        return explosionDamage(target, targetPos, targetBox, explosionPos, 10f, raycastFactory);
-    }
-
     /**
      * Low level control of parameters without having to reimplement everything, for addon authors who wish to use their
      * own predictions or other systems.
      * @see net.minecraft.world.explosion.ExplosionBehavior#calculateDamage(Explosion, Entity, float)
      */
-    public static float explosionDamage(LivingEntity target, Vec3d targetPos, Box targetBox, Vec3d explosionPos, float power, RaycastFactory raycastFactory) {
+    public static float explosionDamage(Entity target, Vec3d targetPos, Box targetBox, Vec3d explosionPos, float power, RaycastFactory raycastFactory) {
         double modDistance = PlayerUtils.distance(targetPos.x, targetPos.y, targetPos.z, explosionPos.x, explosionPos.y, explosionPos.z);
         if (modDistance > power) return 0f;
 
@@ -228,21 +225,46 @@ public class DamageUtils {
     // Fall Damage
 
     /**
-     * @see LivingEntity#computeFallDamage(float, float)
+     * @see Entity#updatePositions(Zone, float)
+     * @see PlayerFallDamage#onLand(Entity, float)
      */
-    public static float fallDamage(LivingEntity entity) {
-        if (entity instanceof PlayerEntity player && player.getAbilities().flying) return 0f;
-        if (entity.hasStatusEffect(StatusEffects.SLOW_FALLING) || entity.hasStatusEffect(StatusEffects.LEVITATION)) return 0f;
+    public static float fallDamage(Entity entity) {
+        // Entity.class method updatePositions line 923
 
-        // Fast path - Above the surface
-        int surface = mc.world.getWorldChunk(entity.getBlockPos()).getHeightmap(Heightmap.Type.MOTION_BLOCKING).get(entity.getBlockX() & 15, entity.getBlockZ() & 15);
-        if (entity.getBlockY() >= surface) return fallDamageReductions(entity, surface);
+        Vector3 acceleration = ((AccessorEntity)entity).getAcceleration();
 
-        // Under the surface
-        BlockHitResult raycastResult = mc.world.raycast(new RaycastContext(entity.getPos(), new Vec3d(entity.getX(), mc.world.getBottomY(), entity.getZ()), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.WATER, entity));
-        if (raycastResult.getType() == HitResult.Type.MISS) return 0;
 
-        return fallDamageReductions(entity, raycastResult.getBlockPos().getY());
+        float oldVelocityY = entity.velocity.y;
+        float ay = acceleration.y * Gdx.graphics.getDeltaTime();
+
+        float factor = entity.position.y - entity.lastPosition.y;
+        double initialSquared = Math.pow(oldVelocityY, 2.0);
+        float finalVelocity = (float)Math.sqrt(initialSquared + (double)(2.0F * acceleration.y * factor));
+        if (Float.isNaN(finalVelocity)) {
+            finalVelocity = 0.0F;
+        }
+
+        finalVelocity = finalVelocity+ay/2.0f;
+
+        // PlayerFallDamage.class method onLand
+
+        if (entity instanceof PlayerEntity) {
+            float u2 = 0.0F;
+            float v2 = finalVelocity * finalVelocity;
+            float a = entity.gravityModifier * Entity.gravity.y;
+            float s = Math.abs((v2 - u2) / (2.0F * a));
+            float estimatedBlocksFallen = (float)Math.round(s * 16.0F) / 16.0F;
+            float blocksPerDamage = 8.0F;
+            float damage = estimatedBlocksFallen / blocksPerDamage;
+            if (!(damage < 1.0F)) {
+                if (entity.hitpoints >= entity.maxHitpoints && damage >= entity.hitpoints) {
+                    damage = entity.hitpoints - 1.0F;
+                }
+
+                return damage;
+            }
+        }
+        return 0;
     }
 
     private static float fallDamageReductions(LivingEntity entity, int surface) {

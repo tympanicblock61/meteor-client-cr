@@ -5,6 +5,8 @@
 
 package meteordevelopment.meteorclient.gui.widgets.input;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.MathUtils;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import meteordevelopment.meteorclient.gui.GuiKeyEvents;
@@ -14,14 +16,14 @@ import meteordevelopment.meteorclient.gui.utils.CharFilter;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.containers.WContainer;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.MathHelper;
+//import net.minecraft.client.MinecraftClient;
+//import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static org.lwjgl.glfw.GLFW.*;
 
 public abstract class WTextBox extends WWidget {
@@ -200,17 +202,19 @@ public abstract class WTextBox extends WWidget {
     public boolean onKeyPressed(int key, int mods) {
         if (!focused) return false;
 
-        boolean control = MinecraftClient.IS_SYSTEM_MAC ? mods == GLFW_MOD_SUPER : mods == GLFW_MOD_CONTROL;
+        boolean control = SystemUtils.IS_OS_MAC_OSX ? mods == GLFW_MOD_SUPER : mods == GLFW_MOD_CONTROL;
 
         if (control && key == GLFW_KEY_C) {
             if (cursor != selectionStart || cursor != selectionEnd) {
-                mc.keyboard.setClipboard(text.substring(selectionStart, selectionEnd));
+                Gdx.app.getClipboard().setContents(text.substring(selectionStart, selectionEnd));
+                //mc.keyboard.setClipboard(text.substring(selectionStart, selectionEnd));
             }
             return true;
         }
         else if (control && key == GLFW_KEY_X) {
             if (cursor != selectionStart || cursor != selectionEnd) {
-                mc.keyboard.setClipboard(text.substring(selectionStart, selectionEnd));
+                Gdx.app.getClipboard().setContents(text.substring(selectionStart, selectionEnd));
+                //mc.keyboard.setClipboard(text.substring(selectionStart, selectionEnd));
                 clearSelection();
             }
 
@@ -221,7 +225,7 @@ public abstract class WTextBox extends WWidget {
             selectionStart = 0;
             selectionEnd = cursor;
         }
-        else if (mods == ((MinecraftClient.IS_SYSTEM_MAC ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL) | GLFW_MOD_SHIFT) && key == GLFW_KEY_A) {
+        else if (mods == ((SystemUtils.IS_OS_MAC_OSX ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL) | GLFW_MOD_SHIFT) && key == GLFW_KEY_A) {
             resetSelection();
         }
         else if (key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) {
@@ -264,16 +268,16 @@ public abstract class WTextBox extends WWidget {
     public boolean onKeyRepeated(int key, int mods) {
         if (!focused) return false;
 
-        boolean control = MinecraftClient.IS_SYSTEM_MAC ? mods == GLFW_MOD_SUPER : mods == GLFW_MOD_CONTROL;
+        boolean control = SystemUtils.IS_OS_MAC_OSX ? mods == GLFW_MOD_SUPER : mods == GLFW_MOD_CONTROL;
         boolean shift = mods == GLFW_MOD_SHIFT;
-        boolean controlShift = mods == ((SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : MinecraftClient.IS_SYSTEM_MAC ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL) | GLFW_MOD_SHIFT);
+        boolean controlShift = mods == ((SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : SystemUtils.IS_OS_MAC_OSX ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL) | GLFW_MOD_SHIFT);
         boolean altShift = mods == ((SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_CONTROL : GLFW_MOD_ALT) | GLFW_MOD_SHIFT);
 
         if (control && key == GLFW_KEY_V) {
             clearSelection();
 
             String preText = text;
-            String clipboard = mc.keyboard.getClipboard();
+            String clipboard = Gdx.app.getClipboard().getContents();
             int addedChars = 0;
 
             StringBuilder sb = new StringBuilder(text.length() + clipboard.length());
@@ -298,7 +302,7 @@ public abstract class WTextBox extends WWidget {
             if (cursor > 0 && cursor == selectionStart && cursor == selectionEnd) {
                 String preText = text;
 
-                int count = (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : MinecraftClient.IS_SYSTEM_MAC ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL))
+                int count = (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : SystemUtils.IS_OS_MAC_OSX ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL))
                     ? cursor
                     : (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_CONTROL : GLFW_MOD_ALT))
                     ? countToNextSpace(true)
@@ -321,7 +325,7 @@ public abstract class WTextBox extends WWidget {
                 if (cursor < text.length()) {
                     String preText = text;
 
-                    int count = mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : MinecraftClient.IS_SYSTEM_MAC ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL)
+                    int count = mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : SystemUtils.IS_OS_MAC_OSX ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL)
                         ? text.length() - cursor
                         : (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_CONTROL : GLFW_MOD_ALT))
                         ? countToNextSpace(false)
@@ -343,7 +347,7 @@ public abstract class WTextBox extends WWidget {
                     cursor -= countToNextSpace(true);
                     resetSelection();
                 }
-                else if (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : MinecraftClient.IS_SYSTEM_MAC ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL)) {
+                else if (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : SystemUtils.IS_OS_MAC_OSX ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL)) {
                     cursor = 0;
                     resetSelection();
                 }
@@ -402,7 +406,7 @@ public abstract class WTextBox extends WWidget {
                     cursor += countToNextSpace(false);
                     resetSelection();
                 }
-                else if (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : MinecraftClient.IS_SYSTEM_MAC ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL)) {
+                else if (mods == (SystemUtils.IS_OS_WINDOWS ? GLFW_MOD_ALT : SystemUtils.IS_OS_MAC_OSX ? GLFW_MOD_SUPER : GLFW_MOD_CONTROL)) {
                     cursor = text.length();
                     resetSelection();
                 }
@@ -603,7 +607,7 @@ public abstract class WTextBox extends WWidget {
             textStart += cursor - (textStart + maxTextWidth());
         }
 
-        textStart = MathHelper.clamp(textStart, 0, Math.max(textWidth() - maxTextWidth(), 0));
+        textStart = MathUtils.clamp(textStart, 0, Math.max(textWidth() - maxTextWidth(), 0));
 
         onCursorChanged();
 
@@ -658,7 +662,7 @@ public abstract class WTextBox extends WWidget {
     public void set(String text) {
         this.text = text;
 
-        cursor = MathHelper.clamp(cursor, 0, text.length());
+        cursor = MathUtils.clamp(cursor, 0, text.length());
         selectionStart = cursor;
         selectionEnd = cursor;
 

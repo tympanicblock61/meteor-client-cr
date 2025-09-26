@@ -5,6 +5,10 @@
 
 package meteordevelopment.meteorclient.systems.modules.render.marker;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import finalforeach.cosmicreach.gamestates.GameState;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.screens.MarkerScreen;
@@ -12,9 +16,7 @@ import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
-import meteordevelopment.meteorclient.utils.world.Dimension;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.nbt.NbtCompound;
+
 
 public abstract class BaseMarker implements ISerializable<BaseMarker> {
     public final Settings settings = new Settings();
@@ -33,13 +35,6 @@ public abstract class BaseMarker implements ISerializable<BaseMarker> {
         .build()
     );
 
-    private final Setting<Dimension> dimension = sgBase.add(new EnumSetting.Builder<Dimension>()
-        .name("dimension")
-        .description("In which dimension this marker should be visible.")
-        .defaultValue(Dimension.Overworld)
-        .build()
-    );
-
     private final Setting<Boolean> active = sgBase.add(new BoolSetting.Builder()
         .name("active")
         .description("Is this marker visible.")
@@ -49,15 +44,13 @@ public abstract class BaseMarker implements ISerializable<BaseMarker> {
 
     public BaseMarker(String name) {
         this.name.set(name);
-
-        dimension.set(PlayerUtils.getDimension());
     }
 
     protected void render(Render3DEvent event) {}
 
     protected void tick() {}
 
-    public Screen getScreen(GuiTheme theme) {
+    public GameState getScreen(GuiTheme theme) {
         return new MarkerScreen(theme, this);
     }
 
@@ -78,29 +71,25 @@ public abstract class BaseMarker implements ISerializable<BaseMarker> {
     }
 
     public boolean isVisible() {
-        return isActive() && PlayerUtils.getDimension() == dimension.get();
+        return isActive();
     }
 
-    public Dimension getDimension() {
-        return dimension.get();
-    }
 
     public void toggle() {
         active.set(!active.get());
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-        tag.put("settings", settings.toTag());
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("settings", new DataTagManifestAttribute(settings.toTag())));
         return tag;
     }
 
     @Override
-    public BaseMarker fromTag(NbtCompound tag) {
-        NbtCompound settingsTag = (NbtCompound) tag.get("settings");
+    public BaseMarker fromTag(DataTagManifest tag) {
+        DataTagManifest settingsTag = tag.getTag("settings").getTagAsType(DataTagManifest.class).getValue();
         if (settingsTag != null) settings.fromTag(settingsTag);
-
         return this;
     }
 }

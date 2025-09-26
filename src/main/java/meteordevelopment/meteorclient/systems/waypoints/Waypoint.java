@@ -5,18 +5,19 @@
 
 package meteordevelopment.meteorclient.systems.waypoints;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.blocks.BlockPosition;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.renderer.GL;
 import meteordevelopment.meteorclient.renderer.Renderer2D;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.Dimension;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.Map;
 import java.util.Objects;
@@ -72,10 +73,10 @@ public class Waypoint implements ISerializable<Waypoint> {
         .build()
     );
 
-    public Setting<BlockPos> pos = sgPosition.add(new BlockPosSetting.Builder()
+    public Setting<BlockPosition> pos = sgPosition.add(new BlockPosSetting.Builder()
         .name("location")
         .description("The location of the waypoint.")
-        .defaultValue(BlockPos.ORIGIN)
+        .defaultValue(BlockPosition.ofGlobalZoneless(0,0,0))
         .build()
     );
 
@@ -100,23 +101,22 @@ public class Waypoint implements ISerializable<Waypoint> {
         uuid = UUID.randomUUID();
     }
 
-    public Waypoint(NbtElement tag) {
-        NbtCompound nbt = (NbtCompound) tag;
+    public Waypoint(DataTagManifest tag) {
 
-        if (nbt.containsUuid("uuid")) uuid = nbt.getUuid("uuid");
+        if (tag.hasTag("uuid")) uuid = UUID.fromString(tag.getTag("uuid").getTagAsType(String.class).getValue());
         else uuid = UUID.randomUUID();
 
-        fromTag(nbt);
+        fromTag(tag);
     }
 
     public void renderIcon(double x, double y, double a, double size) {
-        AbstractTexture texture = Waypoints.get().icons.get(icon.get());
+        Texture texture = Waypoints.get().icons.get(icon.get());
         if (texture == null) return;
 
         int preA = color.get().a;
-        color.get().a *= a;
+        color.get().a *= (int) a;
 
-        GL.bindTexture(texture.getGlId());
+        GL.bindTexture(texture.glTarget);
         Renderer2D.TEXTURE.begin();
         Renderer2D.TEXTURE.texQuad(x, y, size, size, color.get());
         Renderer2D.TEXTURE.render(null);
@@ -124,24 +124,25 @@ public class Waypoint implements ISerializable<Waypoint> {
         color.get().a = preA;
     }
 
-    public BlockPos getPos() {
-        Dimension dim = dimension.get();
-        BlockPos pos = this.pos.get();
+    public BlockPosition getPos() {
+        //Dimension dim = dimension.get();
 
-        Dimension currentDim = PlayerUtils.getDimension();
-        if (dim == currentDim || dim.equals(Dimension.End)) return this.pos.get();
+//        Dimension currentDim = PlayerUtils.getDimension();
+//        if (dim == currentDim || dim.equals(Dimension.End)) return this.pos.get();
+//
+//        return switch (dim) {
+//            case Overworld -> BlockPosition.ofGlobalZoneless(pos.getX() / 8, pos.getY(), pos.getZ() / 8);
+//            case Nether -> BlockPosition.ofGlobalZoneless(pos.getX() * 8, pos.getY(), pos.getZ() * 8);
+//            default -> null;
+//        };
 
-        return switch (dim) {
-            case Overworld -> new BlockPos(pos.getX() / 8, pos.getY(), pos.getZ() / 8);
-            case Nether -> new BlockPos(pos.getX() * 8, pos.getY(), pos.getZ() * 8);
-            default -> null;
-        };
+        return this.pos.get();
     }
 
     private void validateIcon() {
-        Map<String, AbstractTexture> icons = Waypoints.get().icons;
+        Map<String, Texture> icons = Waypoints.get().icons;
 
-        AbstractTexture texture = icons.get(icon.get());
+        Texture texture = icons.get(icon.get());
         if (texture == null && !icons.isEmpty()) {
             icon.set(icons.keySet().iterator().next());
         }
@@ -149,7 +150,7 @@ public class Waypoint implements ISerializable<Waypoint> {
 
     public static class Builder {
         private String name = "", icon = "";
-        private BlockPos pos = BlockPos.ORIGIN;
+        private BlockPosition pos = BlockPosition.ofGlobalZoneless(0,0,0);
         private Dimension dimension = Dimension.Overworld;
 
         public Builder name(String name) {
@@ -162,7 +163,7 @@ public class Waypoint implements ISerializable<Waypoint> {
             return this;
         }
 
-        public Builder pos(BlockPos pos) {
+        public Builder pos(BlockPosition pos) {
             this.pos = pos;
             return this;
         }
@@ -185,19 +186,20 @@ public class Waypoint implements ISerializable<Waypoint> {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
 
-        tag.putUuid("uuid", uuid);
-        tag.put("settings", settings.toTag());
+        tag.addTag(new DataTag<>("uuid", new StringDataAttribute(uuid.toString())));
+        tag.addTag(new DataTag<>("settings", new DataTagManifestAttribute(settings.toTag())));
 
         return tag;
     }
 
     @Override
-    public Waypoint fromTag(NbtCompound tag) {
-        if (tag.contains("settings")) {
-            settings.fromTag(tag.getCompound("settings"));
+    public Waypoint fromTag(DataTagManifest tag) {
+
+        if (tag.hasTag("settings")) {
+            settings.fromTag(tag.getTag("settings").getTagAsType(DataTagManifest.class).getValue());
         }
 
         return this;

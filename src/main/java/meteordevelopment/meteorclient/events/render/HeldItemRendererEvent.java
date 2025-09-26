@@ -5,17 +5,17 @@
 
 package meteordevelopment.meteorclient.events.render;
 
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Hand;
+//import net.minecraft.client.util.math.MatrixStack;
+//import net.minecraft.util.Hand;
+
+import com.badlogic.gdx.math.Matrix4;
 
 public class HeldItemRendererEvent {
     private static final HeldItemRendererEvent INSTANCE = new HeldItemRendererEvent();
 
-    public Hand hand;
-    public MatrixStack matrix;
+    public Matrix4 matrix;
 
-    public static HeldItemRendererEvent get(Hand hand, MatrixStack matrices) {
-        INSTANCE.hand = hand;
+    public static HeldItemRendererEvent get(Matrix4 matrices) {
         INSTANCE.matrix = matrices;
         return INSTANCE;
     }

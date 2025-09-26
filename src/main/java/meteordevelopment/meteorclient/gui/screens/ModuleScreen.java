@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.gui.screens;
 
+import com.github.puzzle.game.items.data.DataTagManifest;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.meteor.ActiveModulesChangedEvent;
 import meteordevelopment.meteorclient.events.meteor.ModuleBindChangedEvent;
@@ -22,9 +23,8 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WCheckbox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WFavorite;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+import meteordevelopment.meteorclient.utils.misc.DataTagUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.nbt.NbtCompound;
 
 import static meteordevelopment.meteorclient.utils.Utils.getWindowWidth;
 
@@ -107,14 +107,14 @@ public class ModuleScreen extends WindowScreen {
         }
     }
 
-    @Override
-    public boolean shouldCloseOnEsc() {
-        return !Modules.get().isBinding();
-    }
+//    @Override
+//    public boolean shouldCloseOnEsc() {
+//        return !Modules.get().isBinding();
+//    }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void update(float delta) {
+        super.update(delta);
 
         module.settings.tick(settingsContainer, theme);
     }
@@ -131,18 +131,28 @@ public class ModuleScreen extends WindowScreen {
 
     @Override
     public boolean toClipboard() {
-        return NbtUtils.toClipboard(module.title, module.toTag());
+        return DataTagUtils.toClipboard(module.title, module.toTag());
     }
 
     @Override
     public boolean fromClipboard() {
-        NbtCompound clipboard = NbtUtils.fromClipboard(module.toTag());
+        DataTagManifest clipboard = DataTagUtils.fromClipboard(module.toTag());
 
         if (clipboard != null) {
             module.fromTag(clipboard);
             return true;
         }
 
+        return false;
+    }
+
+    @Override
+    public boolean touchCancelled(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
         return false;
     }
 }

@@ -20,7 +20,7 @@ public abstract class AddAccountScreen extends WindowScreen {
     }
 
     @Override
-    public void tick() {
+    public void update(float deltaTime) {
         if (locked) {
             if (timer > 2) {
                 add.set(getNext(add));

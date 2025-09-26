@@ -5,11 +5,20 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+//import net.minecraft.block.Block;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.util.Identifier;
 
+import com.github.puzzle.game.PuzzleRegistries;
+import com.github.puzzle.game.block.IModBlock;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.blocks.Block;
+import finalforeach.cosmicreach.util.Identifier;
+
+import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -24,7 +33,7 @@ public class BlockSetting extends Setting<Block> {
 
     @Override
     protected Block parseImpl(String str) {
-        return parseId(Registries.BLOCK, str);
+        return (Block) PuzzleRegistries.BLOCKS.get(Identifier.of(str));
     }
 
     @Override
@@ -34,24 +43,24 @@ public class BlockSetting extends Setting<Block> {
 
     @Override
     public Iterable<Identifier> getIdentifierSuggestions() {
-        return Registries.BLOCK.getIds();
+        return PuzzleRegistries.BLOCKS.names();
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        tag.putString("value", Registries.BLOCK.getId(get()).toString());
+    protected DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new StringDataAttribute(get().getStringId())));
 
         return tag;
     }
 
     @Override
-    protected Block load(NbtCompound tag) {
-        value = Registries.BLOCK.get(Identifier.of(tag.getString("value")));
+    protected Block load(DataTagManifest tag) {
+        value = (Block) PuzzleRegistries.BLOCKS.get(Identifier.of(tag.getTag("value").getTagAsType(String.class).getValue()));
 
         if (filter != null && !filter.test(value)) {
-            for (Block block : Registries.BLOCK) {
-                if (filter.test(block)) {
-                    value = block;
+            for (IModBlock block : PuzzleRegistries.BLOCKS) {
+                if (filter.test((Block) block)) {
+                    value = (Block) block;
                     break;
                 }
             }

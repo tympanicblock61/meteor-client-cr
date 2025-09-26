@@ -11,9 +11,11 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import finalforeach.cosmicreach.util.Identifier;
 import meteordevelopment.meteorclient.settings.Setting;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.Identifier;
+import meteordevelopment.stolen.CommandSource;
+//import net.minecraft.command.CommandSource;
+//import net.minecraft.util.Identifier;
 
 import java.util.concurrent.CompletableFuture;
 

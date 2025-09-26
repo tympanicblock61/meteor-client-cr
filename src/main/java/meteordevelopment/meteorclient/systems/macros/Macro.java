@@ -5,6 +5,10 @@
 
 package meteordevelopment.meteorclient.systems.macros;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import finalforeach.cosmicreach.savelib.crbin.ICRBinSerializable;
 import meteordevelopment.meteorclient.gui.utils.StarscriptTextBoxRenderer;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
@@ -12,14 +16,12 @@ import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.misc.MeteorStarscript;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.starscript.Script;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Macro implements ISerializable<Macro> {
     public final Settings settings = new Settings();
@@ -50,12 +52,12 @@ public class Macro implements ISerializable<Macro> {
     private boolean dirty;
 
     public Macro() {}
-    public Macro(NbtElement tag) {
-        fromTag((NbtCompound) tag);
+    public Macro(ICRBinSerializable tag) {
+        fromTag((DataTagManifest) tag);
     }
 
     public boolean onAction(boolean isKey, int value, int modifiers) {
-        if (!keybind.get().matches(isKey, value, modifiers) || mc.currentScreen != null) return false;
+        if (!keybind.get().matches(isKey, value, modifiers) /* || mc.currentScreen != null*/) return false;
         return onAction();
     }
 
@@ -83,20 +85,17 @@ public class Macro implements ISerializable<Macro> {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-
-        tag.put("settings", settings.toTag());
-
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("settings", new DataTagManifestAttribute(settings.toTag())));
         return tag;
     }
 
     @Override
-    public Macro fromTag(NbtCompound tag) {
-        if (tag.contains("settings")) {
-            settings.fromTag(tag.getCompound("settings"));
+    public Macro fromTag(DataTagManifest tag) {
+        if (tag.hasTag("settings")) {
+            settings.fromTag(tag.getTag("settings").getTagAsType(DataTagManifest.class).getValue());
         }
-
         return this;
     }
 

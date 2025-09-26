@@ -5,11 +5,11 @@
 
 package meteordevelopment.meteorclient.addons;
 
+import com.github.puzzle.core.loader.meta.ModInfo;
+import com.github.puzzle.core.loader.provider.mod.ModContainer;
+import com.github.puzzle.core.loader.util.ModLocator;
 import meteordevelopment.meteorclient.MeteorClient;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
-import net.fabricmc.loader.api.metadata.ModMetadata;
-import net.fabricmc.loader.api.metadata.Person;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +74,7 @@ public class AddonManager {
 
             addon.name = metadata.getName();
 
-            if (metadata.getAuthors().isEmpty()) throw new RuntimeException("Addon \"%s\" requires at least 1 author to be defined in it's fabric.mod.json. See https://fabricmc.net/wiki/documentation:fabric_mod_json_spec".formatted(addon.name));
+            if (metadata.getAuthors().isEmpty()) throw new RuntimeException("Addon \"%s\" requires at least 1 author to be defined in it's puzzle.mod.json. See https://fabricmc.net/wiki/documentation:fabric_mod_json_spec".formatted(addon.name));
             addon.authors = new String[metadata.getAuthors().size()];
 
             if (metadata.containsCustomValue(MeteorClient.MOD_ID + ":color")) {

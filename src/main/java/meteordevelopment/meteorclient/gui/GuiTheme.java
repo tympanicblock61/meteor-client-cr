@@ -5,10 +5,16 @@
 
 package meteordevelopment.meteorclient.gui;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+import finalforeach.cosmicreach.gamestates.GameState;
+import finalforeach.cosmicreach.items.ItemStack;
 import meteordevelopment.meteorclient.gui.renderer.packer.GuiTexture;
 import meteordevelopment.meteorclient.gui.screens.ModuleScreen;
 import meteordevelopment.meteorclient.gui.screens.ModulesScreen;
-import meteordevelopment.meteorclient.gui.screens.NotebotSongsScreen;
 import meteordevelopment.meteorclient.gui.screens.ProxiesScreen;
 import meteordevelopment.meteorclient.gui.screens.accounts.AccountsScreen;
 import meteordevelopment.meteorclient.gui.tabs.TabScreen;
@@ -22,16 +28,16 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.*;
 import meteordevelopment.meteorclient.renderer.Texture;
 import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.settings.Settings;
-import meteordevelopment.meteorclient.systems.accounts.Account;
+//import meteordevelopment.meteorclient.systems.accounts.Account;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.misc.Names;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.math.BlockPos;
+//import net.minecraft.client.gui.screen.Screen;
+//import net.minecraft.item.ItemStack;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.util.math.BlockPos;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -143,7 +149,7 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
         return section(title, true);
     }
 
-    public abstract WAccount account(WidgetScreen screen, Account<?> account);
+//    public abstract WAccount account(WidgetScreen screen, Account<?> account);
 
     public abstract WWidget module(Module module);
 
@@ -187,7 +193,7 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
         return w(new WDoubleEdit(value, min, max, 0, 10, 3, false));
     }
 
-    public WBlockPosEdit blockPosEdit(BlockPos value) {
+    public WBlockPosEdit blockPosEdit(BlockPosition value) {
         return w(new WBlockPosEdit(value));
     }
 
@@ -211,7 +217,7 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
     public TabScreen modulesScreen() {
         return new ModulesScreen(this);
     }
-    public boolean isModulesScreen(Screen screen) {
+    public boolean isModulesScreen(GameState screen) {
         return screen instanceof ModulesScreen;
     }
 
@@ -223,9 +229,9 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
         return new AccountsScreen(this);
     }
 
-    public NotebotSongsScreen notebotSongs() {
-        return new NotebotSongsScreen(this);
-    }
+//    public NotebotSongsScreen notebotSongs() {
+//        return new NotebotSongsScreen(this);
+//    }
 
     public WidgetScreen proxiesScreen() {
         return new ProxiesScreen(this);
@@ -308,30 +314,26 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
     // Saving / Loading
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
 
-        tag.putString("name", name);
-        tag.put("settings", settings.toTag());
-
-        NbtCompound configs = new NbtCompound();
+        tag.addTag(new DataTag<>("name", new StringDataAttribute(name)));
+        tag.addTag(new DataTag<>("settings", new DataTagManifestAttribute(settings.toTag())));
+        DataTagManifest configs = new DataTagManifest();
         for (String id : windowConfigs.keySet()) {
-            configs.put(id, windowConfigs.get(id).toTag());
+            configs.addTag(new DataTag<>(id, new DataTagManifestAttribute(windowConfigs.get(id).toTag())));
         }
-        tag.put("windowConfigs", configs);
-
+        tag.addTag(new DataTag<>("windowConfigs", new DataTagManifestAttribute(configs)));
         return tag;
     }
 
     @Override
-    public GuiTheme fromTag(NbtCompound tag) {
-        settings.fromTag(tag.getCompound("settings"));
-
-        NbtCompound configs = tag.getCompound("windowConfigs");
+    public GuiTheme fromTag(DataTagManifest tag) {
+        settings.fromTag(tag.getTag("settings").getTagAsType(DataTagManifest.class).getValue());
+        DataTagManifest configs = tag.getTag("windowConfigs").getTagAsType(DataTagManifest.class).getValue();
         for (String id : configs.getKeys()) {
-            windowConfigs.put(id, new WindowConfig().fromTag(configs.getCompound(id)));
+            windowConfigs.put(id, new WindowConfig().fromTag(configs.getTag(id).getTagAsType(DataTagManifest.class).getValue()));
         }
-
         return this;
     }
 }

@@ -5,13 +5,22 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.item.Item;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+//import net.minecraft.item.Item;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.util.Identifier;
 
+import com.github.puzzle.game.PuzzleRegistries;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.items.Item;
+import finalforeach.cosmicreach.util.Identifier;
+
+import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ItemSetting extends Setting<Item> {
     public final Predicate<Item> filter;
@@ -24,7 +33,7 @@ public class ItemSetting extends Setting<Item> {
 
     @Override
     protected Item parseImpl(String str) {
-        return parseId(Registries.ITEM, str);
+        return Item.allItems.get(str);
     }
 
     @Override
@@ -34,22 +43,21 @@ public class ItemSetting extends Setting<Item> {
 
     @Override
     public Iterable<Identifier> getIdentifierSuggestions() {
-        return Registries.ITEM.getIds();
+        return Arrays.stream(Item.allItems.keys().toArray().items).map(Identifier::of).collect(Collectors.toList());
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        tag.putString("value", Registries.ITEM.getId(get()).toString());
-
+    public DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new StringDataAttribute(get().getID())));
         return tag;
     }
 
     @Override
-    public Item load(NbtCompound tag) {
-        value = Registries.ITEM.get(Identifier.of(tag.getString("value")));
+    public Item load(DataTagManifest tag) {
+        value = Item.allItems.get(Identifier.of(tag.getTag("value").getTagAsType(String.class).getValue()).toString());
 
         if (filter != null && !filter.test(value)) {
-            for (Item item : Registries.ITEM) {
+            for (Item item : Item.allItems.values()) {
                 if (filter.test(item)) {
                     value = item;
                     break;

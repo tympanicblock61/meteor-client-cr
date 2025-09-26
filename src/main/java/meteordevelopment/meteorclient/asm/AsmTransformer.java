@@ -5,7 +5,7 @@
 
 package meteordevelopment.meteorclient.asm;
 
-import net.fabricmc.loader.api.FabricLoader;
+//import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -31,7 +31,9 @@ public abstract class AsmTransformer {
         throw new RuntimeException(message);
     }
 
+    // TODO remove
     protected static String mapClassName(String name) {
-        return FabricLoader.getInstance().getMappingResolver().mapClassName("intermediary", name.replace('/', '.'));
+        return name;
+        //return FabricLoader.getInstance().getMappingResolver().mapClassName("intermediary", name.replace('/', '.'));
     }
 }

@@ -5,22 +5,49 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.Registries;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtString;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.sound.SoundEvent;
+//import net.minecraft.util.Identifier;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.github.puzzle.core.registries.GenericRegistry;
+import com.github.puzzle.core.registries.IRegistry;
+import com.github.puzzle.game.PuzzleRegistries;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import de.pottgames.tuningfork.SoundBuffer;
+import finalforeach.cosmicreach.GameAssetLoader;
+import finalforeach.cosmicreach.networking.packets.sounds.PlaySound2DPacket;
+import finalforeach.cosmicreach.util.Identifier;
+import meteordevelopment.meteorclient.MeteorClient;
+
+import javax.xml.crypto.Data;
+import java.util.*;
 import java.util.function.Consumer;
 
-public class SoundEventListSetting extends Setting<List<SoundEvent>> {
-    public SoundEventListSetting(String name, String description, List<SoundEvent> defaultValue, Consumer<List<SoundEvent>> onChanged, Consumer<Setting<List<SoundEvent>>> onModuleActivated, IVisible visible) {
+public class SoundEventListSetting extends Setting<List<SoundBuffer>> {
+
+    public static Map<SoundBuffer, Identifier> SOUNDS_R = new HashMap<>();
+    public static IRegistry<SoundBuffer> SOUNDS = new GenericRegistry<>(Identifier.of("sounds"));
+
+
+
+    public SoundEventListSetting(String name, String description, List<SoundBuffer> defaultValue, Consumer<List<SoundBuffer>> onChanged, Consumer<Setting<List<SoundBuffer>>> onModuleActivated, IVisible visible) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
+
+        if (SOUNDS.names().isEmpty()) {
+            GameAssetLoader.forEachAsset("base/sounds/", ".ogg", (path, file) -> {
+                SoundBuffer sound = GameAssetLoader.getSound(path);
+                Identifier id = Identifier.of("base", file.name());
+                SOUNDS.store(id, sound);
+                SOUNDS_R.put(sound, id);
+            });
+        }
     }
 
     @Override
@@ -29,61 +56,56 @@ public class SoundEventListSetting extends Setting<List<SoundEvent>> {
     }
 
     @Override
-    protected List<SoundEvent> parseImpl(String str) {
+    protected List<SoundBuffer> parseImpl(String str) {
         String[] values = str.split(",");
-        List<SoundEvent> sounds = new ArrayList<>(values.length);
-
-        try {
-            for (String value : values) {
-                SoundEvent sound = parseId(Registries.SOUND_EVENT, value);
-                if (sound != null) sounds.add(sound);
-            }
-        } catch (Exception ignored) {}
-
+        List<SoundBuffer> sounds = new ArrayList<>(values.length);
+        for (String value : values) {
+            SoundBuffer sound = SOUNDS.get(Identifier.of("base", value));
+            if (sound != null) sounds.add(sound);
+        }
         return sounds;
     }
 
     @Override
-    protected boolean isValueValid(List<SoundEvent> value) {
+    protected boolean isValueValid(List<SoundBuffer> value) {
         return true;
     }
 
     @Override
     public Iterable<Identifier> getIdentifierSuggestions() {
-        return Registries.SOUND_EVENT.getIds();
+        return SOUNDS.names();
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        NbtList valueTag = new NbtList();
-        for (SoundEvent sound : get()) {
-            Identifier id = Registries.SOUND_EVENT.getId(sound);
-            if (id != null) valueTag.add(NbtString.of(id.toString()));
+    public DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<StringDataAttribute> valueTag = new ListDataAttribute<>();
+        List<StringDataAttribute> list_ = new ArrayList<>();
+        for (SoundBuffer sound : get()) {
+            Identifier id = SOUNDS_R.get(sound);
+            if (id != null) list_.add(new StringDataAttribute(id.toString()));
         }
-        tag.put("value", valueTag);
-
+        valueTag.setValue(list_);
+        tag.addTag(new DataTag<>("value", valueTag));
         return tag;
     }
 
     @Override
-    public List<SoundEvent> load(NbtCompound tag) {
+    public List<SoundBuffer> load(DataTagManifest tag) {
         get().clear();
-
-        NbtList valueTag = tag.getList("value", 8);
-        for (NbtElement tagI : valueTag) {
-            SoundEvent soundEvent = Registries.SOUND_EVENT.get(Identifier.of(tagI.asString()));
+        List<StringDataAttribute> valueTag = tag.getTag("value").getTagAsType((Class<List<StringDataAttribute>>) (Class<?>) List.class).getValue();
+        for (StringDataAttribute tagI : valueTag) {
+            SoundBuffer soundEvent = SOUNDS.get(Identifier.of(tagI.getValue()));
             if (soundEvent != null) get().add(soundEvent);
         }
-
         return get();
     }
 
-    public static class Builder extends SettingBuilder<Builder, List<SoundEvent>, SoundEventListSetting> {
+    public static class Builder extends SettingBuilder<Builder, List<SoundBuffer>, SoundEventListSetting> {
         public Builder() {
             super(new ArrayList<>(0));
         }
 
-        public Builder defaultValue(SoundEvent... defaults) {
+        public Builder defaultValue(SoundBuffer... defaults) {
             return defaultValue(defaults != null ? Arrays.asList(defaults) : new ArrayList<>());
         }
 

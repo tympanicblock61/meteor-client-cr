@@ -5,6 +5,8 @@
 
 package meteordevelopment.meteorclient.gui.screens.settings;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.MathUtils;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
@@ -18,9 +20,7 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WCheckbox;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.util.math.MathHelper;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class ColorSettingScreen extends WindowScreen {
     private static final Color[] HUE_COLORS = { new Color(255, 0, 0), new Color(255, 255, 0), new Color(0, 255, 0), new Color(0, 255, 255), new Color(0, 0, 255), new Color(255, 0, 255), new Color(255, 0, 0) };
@@ -48,13 +48,13 @@ public class ColorSettingScreen extends WindowScreen {
     @Override
     public boolean toClipboard() {
         String color = setting.get().toString().replace(" ", ",");
-        mc.keyboard.setClipboard(color);
-        return mc.keyboard.getClipboard().equals(color);
+        Gdx.app.getClipboard().setContents(color);
+        return Gdx.app.getClipboard().getContents().equals(color);
     }
 
     @Override
     public boolean fromClipboard() {
-        String clipboard = mc.keyboard.getClipboard().trim();
+        String clipboard = Gdx.app.getClipboard().getContents().trim();
         SettingColor parsed;
 
         if ((parsed = parseRGBA(clipboard)) != null) {
@@ -182,8 +182,8 @@ public class ColorSettingScreen extends WindowScreen {
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void update(float delta) {
+        super.update(delta);
         if (setting.get().rainbow) setFromSetting();
     }
 
@@ -284,6 +284,16 @@ public class ColorSettingScreen extends WindowScreen {
         displayQuad.color.set(c);
         setting.onChanged();
         callAction();
+    }
+
+    @Override
+    public boolean touchCancelled(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
+        return false;
     }
 
     private class WBrightnessQuad extends WWidget {
@@ -565,7 +575,7 @@ public class ColorSettingScreen extends WindowScreen {
             if (dragging) {
                 if (mouseX >= this.x && mouseX <= this.x + width) {
                     handleX += mouseX - lastMouseX;
-                    handleX = MathHelper.clamp(handleX, 0, width);
+                    handleX = MathUtils.clamp(handleX, 0, width);
                 } else {
                     if (handleX > 0 && mouseX < this.x) handleX = 0;
                     else if (handleX < width && mouseX > this.x + width) handleX = width;

@@ -5,15 +5,36 @@
 
 package meteordevelopment.meteorclient.utils;
 
-import com.mojang.blaze3d.systems.ProjectionType;
-import com.mojang.blaze3d.systems.RenderSystem;
+//import com.mojang.blaze3d.systems.ProjectionType;
+//import com.mojang.blaze3d.systems.RenderSystem;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.math.MathUtils;
+import com.github.puzzle.game.resources.PuzzleGameAssetLoader;
+import com.github.puzzle.util.Vec3i;
+import finalforeach.cosmicreach.entities.Entity;
+import finalforeach.cosmicreach.gamestates.*;
+import finalforeach.cosmicreach.items.Item;
+import finalforeach.cosmicreach.settings.ControlSettings;
+import finalforeach.cosmicreach.settings.Keybind;
 import it.unimi.dsi.fastutil.objects.*;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector3;
+import finalforeach.cosmicreach.GameSingletons;
+import finalforeach.cosmicreach.blockentities.BlockEntity;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+import finalforeach.cosmicreach.entities.player.Player;
+import finalforeach.cosmicreach.entities.player.PlayerEntity;
+import finalforeach.cosmicreach.items.ItemStack;
+import finalforeach.cosmicreach.settings.GraphicsSettings;
+import finalforeach.cosmicreach.world.Chunk;
+import finalforeach.cosmicreach.world.Zone;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.tabs.TabScreen;
-import meteordevelopment.meteorclient.mixin.*;
+//import meteordevelopment.meteorclient.mixin.*;
 import meteordevelopment.meteorclient.mixininterface.IMinecraftClient;
-import meteordevelopment.meteorclient.settings.StatusEffectAmplifierMapSetting;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.BetterTooltips;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
@@ -24,39 +45,39 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.world.BlockEntityIterator;
 import meteordevelopment.meteorclient.utils.world.ChunkIterator;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
-import net.minecraft.client.gui.screen.world.SelectWorldScreen;
-import net.minecraft.client.resource.ResourceReloadLogger;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.item.*;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.chunk.Chunk;
+//import net.minecraft.block.Block;
+//import net.minecraft.block.Blocks;
+//import net.minecraft.block.ShulkerBoxBlock;
+//import net.minecraft.block.entity.BlockEntity;
+//import net.minecraft.client.gui.screen.Screen;
+//import net.minecraft.client.gui.screen.TitleScreen;
+//import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
+//import net.minecraft.client.gui.screen.world.SelectWorldScreen;
+//import net.minecraft.client.resource.ResourceReloadLogger;
+//import net.minecraft.component.ComponentMap;
+//import net.minecraft.component.DataComponentTypes;
+//import net.minecraft.component.type.ItemEnchantmentsComponent;
+//import net.minecraft.component.type.NbtComponent;
+//import net.minecraft.enchantment.Enchantment;
+//import net.minecraft.enchantment.EnchantmentHelper;
+//import net.minecraft.entity.Entity;
+//import net.minecraft.entity.effect.StatusEffect;
+//import net.minecraft.item.*;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.registry.RegistryKey;
+//import net.minecraft.registry.entry.RegistryEntry;
+//import net.minecraft.util.DyeColor;
+//import net.minecraft.util.collection.DefaultedList;
+//import net.minecraft.util.math.BlockPos;
+//import net.minecraft.util.math.MathHelper;
+//import net.minecraft.util.math.Vec3d;
+//import net.minecraft.world.chunk.Chunk;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Range;
-import org.joml.Matrix4f;
-import org.joml.Vector3d;
+//import org.joml.Matrix4f;
+//import org.joml.Vector3d;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +90,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static meteordevelopment.meteorclient.MeteorClient.client;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class Utils {
@@ -81,7 +103,7 @@ public class Utils {
     public static boolean isReleasingTrident;
     public static boolean rendering3D = true;
     public static double frameTime;
-    public static Screen screenToOpen;
+    public static GameState screenToOpen;
 
     private Utils() {
     }
@@ -93,18 +115,23 @@ public class Utils {
 
     @EventHandler
     private static void onTick(TickEvent.Post event) {
-        if (screenToOpen != null && mc.currentScreen == null) {
-            mc.setScreen(screenToOpen);
+        if (screenToOpen != null) {
+            GameState.switchToGameState(screenToOpen);
+            //mc.setScreen(screenToOpen);
             screenToOpen = null;
         }
     }
 
-    public static Vec3d getPlayerSpeed() {
-        if (mc.player == null) return Vec3d.ZERO;
+    public static Vector3 getPlayerSpeed() {
+        if (client.getLocalPlayer() == null) return Vector3.Zero;
 
-        double tX = mc.player.getX() - mc.player.prevX;
-        double tY = mc.player.getY() - mc.player.prevY;
-        double tZ = mc.player.getZ() - mc.player.prevZ;
+        Player player = client.getLocalPlayer();
+        PlayerEntity playerE = (PlayerEntity) player.getEntity();
+
+
+        float tX = playerE.position.x - playerE.lastPosition.x;
+        float tY = playerE.position.y - playerE.lastPosition.y;
+        float tZ = playerE.position.z - playerE.lastPosition.z;
 
         Timer timer = Modules.get().get(Timer.class);
         if (timer.isActive()) {
@@ -117,17 +144,27 @@ public class Utils {
         tY *= 20;
         tZ *= 20;
 
-        return new Vec3d(tX, tY, tZ);
+        return new Vector3(tX, tY, tZ);
     }
 
     public static String getWorldTime() {
-        if (mc.world == null) return "00:00";
+        if (GameSingletons.world == null) return "00:00";
 
-        int ticks = (int) (mc.world.getTimeOfDay() % 24000);
-        ticks += 6000;
-        if (ticks > 24000) ticks -= 24000;
+        Zone playerZone = InGame.getLocalPlayer().getZone();
+        float currentTimeSeconds = playerZone.getCurrentWorldTick() * 0.05F;
+        float totalDaySeconds = 1920.0F;
 
-        return String.format("%02d:%02d", ticks / 1000, (int) (ticks % 1000 / 1000.0 * 60));
+        float dayProgress = (currentTimeSeconds % totalDaySeconds) / totalDaySeconds;
+        int hours = (int) (dayProgress * 24);
+        int minutes = (int) ((dayProgress * 1440) % 60);
+
+        return String.format("%02d:%02d", hours, minutes);
+
+//        int ticks = (int) (mc.world.getTimeOfDay() % 24000);
+//        ticks += 6000;
+//        if (ticks > 24000) ticks -= 24000;
+//
+//        return String.format("%02d:%02d", ticks / 1000, (int) (ticks % 1000 / 1000.0 * 60));
     }
 
     public static Iterable<Chunk> chunks(boolean onlyWithLoadedNeighbours) {
@@ -142,164 +179,31 @@ public class Utils {
         return BlockEntityIterator::new;
     }
 
-    public static void getEnchantments(ItemStack itemStack, Object2IntMap<RegistryEntry<Enchantment>> enchantments) {
-        enchantments.clear();
-
-        if (!itemStack.isEmpty()) {
-            Set<Object2IntMap.Entry<RegistryEntry<Enchantment>>> itemEnchantments = itemStack.getItem() == Items.ENCHANTED_BOOK
-                ? itemStack.get(DataComponentTypes.STORED_ENCHANTMENTS).getEnchantmentEntries()
-                : itemStack.getEnchantments().getEnchantmentEntries();
-
-            for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : itemEnchantments) {
-                enchantments.put(entry.getKey(), entry.getIntValue());
-            }
-        }
-    }
-
-    public static int getEnchantmentLevel(ItemStack itemStack, RegistryKey<Enchantment> enchantment) {
-        if (itemStack.isEmpty()) return 0;
-        Object2IntMap<RegistryEntry<Enchantment>> itemEnchantments = new Object2IntArrayMap<>();
-        getEnchantments(itemStack, itemEnchantments);
-        return getEnchantmentLevel(itemEnchantments, enchantment);
-    }
-
-    public static int getEnchantmentLevel(Object2IntMap<RegistryEntry<Enchantment>> itemEnchantments, RegistryKey<Enchantment> enchantment) {
-        for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : Object2IntMaps.fastIterable(itemEnchantments)) {
-            if (entry.getKey().matchesKey(enchantment)) return entry.getIntValue();
-        }
-        return 0;
-    }
-
-    @SafeVarargs
-    public static boolean hasEnchantments(ItemStack itemStack, RegistryKey<Enchantment>... enchantments) {
-        if (itemStack.isEmpty()) return false;
-        Object2IntMap<RegistryEntry<Enchantment>> itemEnchantments = new Object2IntArrayMap<>();
-        getEnchantments(itemStack, itemEnchantments);
-
-        for (RegistryKey<Enchantment> enchantment : enchantments) {
-            if (!hasEnchantment(itemEnchantments, enchantment)) return false;
-        }
-        return true;
-    }
-
-    public static boolean hasEnchantment(ItemStack itemStack, RegistryKey<Enchantment> enchantmentKey) {
-        if (itemStack.isEmpty()) return false;
-        Object2IntMap<RegistryEntry<Enchantment>> itemEnchantments = new Object2IntArrayMap<>();
-        getEnchantments(itemStack, itemEnchantments);
-        return hasEnchantment(itemEnchantments, enchantmentKey);
-    }
-
-    private static boolean hasEnchantment(Object2IntMap<RegistryEntry<Enchantment>> itemEnchantments, RegistryKey<Enchantment> enchantmentKey) {
-        for (RegistryEntry<Enchantment> enchantment : itemEnchantments.keySet()) {
-            if (enchantment.matchesKey(enchantmentKey)) return true;
-        }
-        return false;
-    }
-
     public static int getRenderDistance() {
-        return Math.max(mc.options.getViewDistance().getValue(), ((ClientPlayNetworkHandlerAccessor) mc.getNetworkHandler()).getChunkLoadDistance());
+        return GraphicsSettings.renderDistanceInChunks.getValue();
     }
 
     public static int getWindowWidth() {
-        return mc.getWindow().getFramebufferWidth();
+        return Gdx.graphics.getBackBufferWidth();
     }
 
     public static int getWindowHeight() {
-        return mc.getWindow().getFramebufferHeight();
+        return Gdx.graphics.getBackBufferHeight();
     }
 
-    public static void unscaledProjection() {
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), 0, 1000, 21000), ProjectionType.ORTHOGRAPHIC);
-        rendering3D = false;
-    }
+    //TODO fix
+//    public static void unscaledProjection() {
+//        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), 0, 1000, 21000), ProjectionType.ORTHOGRAPHIC);
+//        rendering3D = false;
+//    }
+//
+//    public static void scaledProjection() {
+//        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, (float) (mc.getWindow().getFramebufferWidth() / mc.getWindow().getScaleFactor()), (float) (mc.getWindow().getFramebufferHeight() / mc.getWindow().getScaleFactor()), 0, 1000, 21000), ProjectionType.PERSPECTIVE);
+//        rendering3D = true;
+//    }
 
-    public static void scaledProjection() {
-        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, (float) (mc.getWindow().getFramebufferWidth() / mc.getWindow().getScaleFactor()), (float) (mc.getWindow().getFramebufferHeight() / mc.getWindow().getScaleFactor()), 0, 1000, 21000), ProjectionType.PERSPECTIVE);
-        rendering3D = true;
-    }
-
-    public static Vec3d vec3d(BlockPos pos) {
-        return new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    public static boolean openContainer(ItemStack itemStack, ItemStack[] contents, boolean pause) {
-        if (hasItems(itemStack) || itemStack.getItem() == Items.ENDER_CHEST) {
-            Utils.getItemsInContainerItem(itemStack, contents);
-            if (pause) screenToOpen = new PeekScreen(itemStack, contents);
-            else mc.setScreen(new PeekScreen(itemStack, contents));
-            return true;
-        }
-
-        return false;
-    }
-
-    public static void getItemsInContainerItem(ItemStack itemStack, ItemStack[] items) {
-        if (itemStack.getItem() == Items.ENDER_CHEST) {
-            for (int i = 0; i < EChestMemory.ITEMS.size(); i++) {
-                items[i] = EChestMemory.ITEMS.get(i);
-            }
-
-            return;
-        }
-
-        Arrays.fill(items, ItemStack.EMPTY);
-        ComponentMap components = itemStack.getComponents();
-
-        if (components.contains(DataComponentTypes.CONTAINER)) {
-            ContainerComponentAccessor container = ((ContainerComponentAccessor) (Object) components.get(DataComponentTypes.CONTAINER));
-            DefaultedList<ItemStack> stacks = container.getStacks();
-
-            for (int i = 0; i < stacks.size(); i++) {
-                if (i >= 0 && i < items.length) items[i] = stacks.get(i);
-            }
-        }
-        else if (components.contains(DataComponentTypes.BLOCK_ENTITY_DATA)) {
-            NbtComponent nbt2 = components.get(DataComponentTypes.BLOCK_ENTITY_DATA);
-
-            if (nbt2.contains("Items")) {
-                NbtList nbt3 = (NbtList) nbt2.getNbt().get("Items");
-
-                for (int i = 0; i < nbt3.size(); i++) {
-                    int slot = nbt3.getCompound(i).getByte("Slot"); // Apparently shulker boxes can store more than 27 items, good job Mojang
-                    // now NPEs when mc.world == null
-                    if (slot >= 0 && slot < items.length) items[slot] = ItemStack.fromNbtOrEmpty(mc.player.getRegistryManager(), nbt3.getCompound(i));
-                }
-            }
-        }
-    }
-
-    public static Color getShulkerColor(ItemStack shulkerItem) {
-        if (shulkerItem.getItem() instanceof BlockItem blockItem) {
-            Block block = blockItem.getBlock();
-            if (block == Blocks.ENDER_CHEST) return BetterTooltips.ECHEST_COLOR;
-
-            if (block instanceof ShulkerBoxBlock shulkerBlock) {
-                DyeColor dye = shulkerBlock.getColor();
-                if (dye == null) return WHITE;
-
-                final int color = dye.getEntityColor();
-                return new Color((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, 255);
-            }
-        }
-
-        return WHITE;
-    }
-
-    public static boolean hasItems(ItemStack itemStack) {
-        ContainerComponentAccessor container = ((ContainerComponentAccessor) (Object) itemStack.get(DataComponentTypes.CONTAINER));
-        if (container != null && !container.getStacks().isEmpty()) return true;
-
-        NbtCompound compoundTag = itemStack.getOrDefault(DataComponentTypes.BLOCK_ENTITY_DATA, NbtComponent.DEFAULT).getNbt();
-        return compoundTag != null && compoundTag.contains("Items", 9);
-    }
-
-    public static Reference2IntMap<StatusEffect> createStatusEffectMap() {
-        return new Reference2IntArrayMap<>(StatusEffectAmplifierMapSetting.EMPTY_STATUS_EFFECT_MAP);
-    }
-
-    public static String getEnchantSimpleName(RegistryEntry<Enchantment> enchantment, int length) {
-        String name = Names.get(enchantment);
-        return name.length() > length ? name.substring(0, length) : name;
+    public static Vector3 vec3d(BlockPosition pos) {
+        return new Vector3(pos.localX, pos.localY, pos.localZ);
     }
 
     public static boolean searchTextDefault(String text, String filter, boolean caseSensitive) {
@@ -375,23 +279,24 @@ public class Utils {
     }
 
     public static String getWorldName() {
+        return GameSingletons.world.getDisplayName();
         // Singleplayer
-        if (mc.isInSingleplayer()) {
-            if (mc.world == null) return "";
-
-            File folder = ((MinecraftServerAccessor) mc.getServer()).getSession().getWorldDirectory(mc.world.getRegistryKey()).toFile();
-            if (folder.toPath().relativize(mc.runDirectory.toPath()).getNameCount() != 2) {
-                folder = folder.getParentFile();
-            }
-            return folder.getName();
-        }
+//        if (mc.isInSingleplayer()) {
+//            if (mc.world == null) return "";
+//
+//            File folder = ((MinecraftServerAccessor) mc.getServer()).getSession().getWorldDirectory(mc.world.getRegistryKey()).toFile();
+//            if (folder.toPath().relativize(mc.runDirectory.toPath()).getNameCount() != 2) {
+//                folder = folder.getParentFile();
+//            }
+//            return folder.getName();
+//        }
 
         // Multiplayer
-        if (mc.getCurrentServerEntry() != null) {
-            return mc.getCurrentServerEntry().isRealm() ? "realms" : mc.getCurrentServerEntry().address;
-        }
+//        if (mc.getCurrentServerEntry() != null) {
+//            return mc.getCurrentServerEntry().isRealm() ? "realms" : mc.getCurrentServerEntry().address;
+//        }
 
-        return "";
+        //return "";
     }
 
     public static String nameToTitle(String name) {
@@ -492,17 +397,17 @@ public class Utils {
     }
 
     public static boolean canUpdate() {
-        return mc != null && mc.world != null && mc.player != null;
+        return client.getLocalPlayer() != null && GameSingletons.world != null;
     }
 
     public static boolean canOpenGui() {
-        if (canUpdate()) return mc.currentScreen == null;
+        if (canUpdate()) return GameState.currentGameState instanceof InGame;//mc.currentScreen == null;
 
-        return mc.currentScreen instanceof TitleScreen || mc.currentScreen instanceof MultiplayerScreen || mc.currentScreen instanceof SelectWorldScreen;
+        return GameState.currentGameState instanceof MainMenu || GameState.currentGameState instanceof NetworkMenu || GameState.currentGameState instanceof WorldSelectionMenu;
     }
 
     public static boolean canCloseGui() {
-        return mc.currentScreen instanceof TabScreen;
+        return GameState.currentGameState instanceof TabScreen;
     }
 
     public static int random(int min, int max) {
@@ -513,45 +418,38 @@ public class Utils {
         return min + (max - min) * random.nextDouble();
     }
 
-    public static void leftClick() {
-        // check if a screen is open
-        // see net.minecraft.client.Mouse.lockCursor
-        // see net.minecraft.client.MinecraftClient.tick
-        int attackCooldown = ((MinecraftClientAccessor) mc).getAttackCooldown();
-        if (attackCooldown == 10000) {
-            ((MinecraftClientAccessor) mc).setAttackCooldown(0);
+    public static void attack() {
+        if (GameState.currentGameState instanceof InGame && canUpdate()) {
+            if (ControlSettings.keyAttackBreak.isMouseButton()) {
+                sendMouseButton(0, 0, ControlSettings.keyAttackBreak.getValue());
+            } else {
+                sendKeyPress(ControlSettings.keyAttackBreak.getValue());
+            }
         }
+    }
 
-        mc.options.attackKey.setPressed(true);
-        ((MinecraftClientAccessor) mc).leftClick();
-        mc.options.attackKey.setPressed(false);
+    public static void sendMouseButton(int screenX, int screenY, int mouse) {
+        Gdx.input.setCursorPosition(screenX, screenY);
+        InputProcessor currentProcessor = Gdx.input.getInputProcessor();
+        currentProcessor.touchDown(screenX, screenY, 0, mouse);
+        currentProcessor.touchUp(screenX, screenY, 0, mouse);
+    }
+
+    public static void sendKeyPress(int key) {
+        InputProcessor currentProcessor = Gdx.input.getInputProcessor();
+        currentProcessor.keyDown(key);
+        currentProcessor.keyUp(key);
+        if (Keybind.isPrintableChar((char) key)) {
+            currentProcessor.keyTyped((char) key);
+        }
     }
 
     public static void rightClick() {
-        ((IMinecraftClient) mc).meteor$rightClick();
-    }
-
-    public static boolean isShulker(Item item) {
-        return item == Items.SHULKER_BOX || item == Items.WHITE_SHULKER_BOX || item == Items.ORANGE_SHULKER_BOX || item == Items.MAGENTA_SHULKER_BOX || item == Items.LIGHT_BLUE_SHULKER_BOX || item == Items.YELLOW_SHULKER_BOX || item == Items.LIME_SHULKER_BOX || item == Items.PINK_SHULKER_BOX || item == Items.GRAY_SHULKER_BOX || item == Items.LIGHT_GRAY_SHULKER_BOX || item == Items.CYAN_SHULKER_BOX || item == Items.PURPLE_SHULKER_BOX || item == Items.BLUE_SHULKER_BOX || item == Items.BROWN_SHULKER_BOX || item == Items.GREEN_SHULKER_BOX || item == Items.RED_SHULKER_BOX || item == Items.BLACK_SHULKER_BOX;
-    }
-
-    public static boolean isThrowable(Item item) {
-        return item instanceof ExperienceBottleItem || item instanceof BowItem || item instanceof CrossbowItem || item instanceof SnowballItem || item instanceof EggItem || item instanceof EnderPearlItem || item instanceof SplashPotionItem || item instanceof LingeringPotionItem || item instanceof FishingRodItem || item instanceof TridentItem;
-    }
-
-    public static void addEnchantment(ItemStack itemStack, RegistryEntry<Enchantment> enchantment, int level) {
-        ItemEnchantmentsComponent.Builder b = new ItemEnchantmentsComponent.Builder(EnchantmentHelper.getEnchantments(itemStack));
-        b.add(enchantment, level);
-
-        EnchantmentHelper.set(itemStack, b.build());
-    }
-
-    public static void clearEnchantments(ItemStack itemStack) {
-        EnchantmentHelper.apply(itemStack, components -> components.remove(a -> true));
-    }
-
-    public static void removeEnchantment(ItemStack itemStack, Enchantment enchantment) {
-        EnchantmentHelper.apply(itemStack, components -> components.remove(enchantment1 -> enchantment1.value().equals(enchantment)));
+        if (GameState.currentGameState instanceof InGame && canUpdate()) {
+            sendMouseButton(0, 0, Input.Buttons.RIGHT);
+        }
+        // TODO not sure about this
+        //((IMinecraftClient) mc).meteor$rightClick();
     }
 
     public static Color lerp(Color first, Color second, @Range(from = 0, to = 1) float v) {
@@ -563,8 +461,7 @@ public class Utils {
     }
 
     public static boolean isLoading() {
-        ResourceReloadLogger.ReloadState state = ((ResourceReloadLoggerAccessor) ((MinecraftClientAccessor) mc).getResourceReloadLogger()).getReloadState();
-        return state == null || !((ReloadStateAccessor) state).isFinished();
+        return client.getLocalPlayer() != null && client.getLocalPlayer().isLoading() || client.getLocalPlayer() == null && GameSingletons.world == null;
     }
 
     public static int parsePort(String full) {
@@ -602,19 +499,18 @@ public class Utils {
         return !socketAddress.isUnresolved();
     }
 
-    public static Vector3d set(Vector3d vec, Vec3d v) {
-        vec.x = v.x;
-        vec.y = v.y;
-        vec.z = v.z;
+    public static Vector3 set(Vector3 vec, Vec3i v) {
+        vec.x = v.x();
+        vec.y = v.y();
+        vec.z = v.z();
 
         return vec;
     }
 
-    public static Vector3d set(Vector3d vec, Entity entity, double tickDelta) {
-        vec.x = MathHelper.lerp(tickDelta, entity.lastRenderX, entity.getX());
-        vec.y = MathHelper.lerp(tickDelta, entity.lastRenderY, entity.getY());
-        vec.z = MathHelper.lerp(tickDelta, entity.lastRenderZ, entity.getZ());
-
+    public static Vector3 set(Vector3 vec, Entity entity, float tickDelta) {
+        vec.x = MathUtils.lerp(tickDelta, entity.lastPosition.x, entity.position.x);
+        vec.y = MathUtils.lerp(tickDelta, entity.lastPosition.y, entity.position.y);
+        vec.z = MathUtils.lerp(tickDelta, entity.lastPosition.z, entity.position.z);
         return vec;
     }
 

@@ -5,16 +5,21 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.containers.WContainer;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.misc.DataTagUtils;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+//import meteordevelopment.meteorclient.utils.misc.NbtUtils;
 import meteordevelopment.meteorclient.utils.render.color.RainbowColors;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -126,25 +131,20 @@ public class Settings implements ISerializable<Settings>, Iterable<SettingGroup>
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-
-        tag.put("groups", NbtUtils.listToTag(groups));
-
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("groups", DataTagUtils.listToTag(groups)));
         return tag;
     }
 
     @Override
-    public Settings fromTag(NbtCompound tag) {
-        NbtList groupsTag = tag.getList("groups", 10);
-
-        for (NbtElement t : groupsTag) {
-            NbtCompound groupTag = (NbtCompound) t;
-
-            SettingGroup sg = getGroup(groupTag.getString("name"));
+    public Settings fromTag(DataTagManifest tag) {
+        List<DataTagManifestAttribute> groupsTag = tag.getTag("groups").getTagAsType((Class<List<DataTagManifestAttribute>>) (Class<?>) List.class).getValue();
+        for (DataTagManifestAttribute t : groupsTag) {
+            DataTagManifest groupTag = t.getValue();
+            SettingGroup sg = getGroup(groupTag.getTag("name").getTagAsType(String.class).getValue());
             if (sg != null) sg.fromTag(groupTag);
         }
-
         return this;
     }
 }

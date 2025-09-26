@@ -5,7 +5,9 @@
 
 package meteordevelopment.meteorclient.events.entity;
 
-import net.minecraft.entity.Entity;
+//import net.minecraft.entity.Entity;
+
+import finalforeach.cosmicreach.entities.Entity;
 
 public class EntityDestroyEvent {
     private static final EntityDestroyEvent INSTANCE = new EntityDestroyEvent();

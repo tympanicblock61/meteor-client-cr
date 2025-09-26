@@ -5,11 +5,13 @@
 
 package meteordevelopment.meteorclient.renderer.text;
 
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import meteordevelopment.meteorclient.renderer.Mesh;
 import meteordevelopment.meteorclient.utils.render.ByteTexture;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.texture.AbstractTexture;
+//import net.minecraft.client.texture.AbstractTexture;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.*;
 import org.lwjgl.system.MemoryStack;
@@ -18,7 +20,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 public class Font {
-    public AbstractTexture texture;
+    public Texture texture;
     private final int height;
     private final float scale;
     private final float ascent;
@@ -62,7 +64,7 @@ public class Font {
         STBTruetype.stbtt_PackEnd(packContext);
 
         // Create texture object and get font scale
-        texture = new ByteTexture(size, size, bitmap, ByteTexture.Format.A, ByteTexture.Filter.Linear, ByteTexture.Filter.Linear);
+        texture = new ByteTexture(size, size, bitmap, Pixmap.Format.Alpha, ByteTexture.Filter.Linear, ByteTexture.Filter.Linear);
         scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, height);
 
         // Get font vertical ascent

@@ -5,10 +5,11 @@
 
 package meteordevelopment.meteorclient.renderer.text;
 
+import com.badlogic.gdx.math.Matrix4;
 import meteordevelopment.meteorclient.renderer.Fonts;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.util.math.MatrixStack;
+//import net.minecraft.client.util.math.MatrixStack;
 
 public interface TextRenderer {
     static TextRenderer get() {
@@ -36,5 +37,5 @@ public interface TextRenderer {
     boolean isBuilding();
 
     default void end() { end(null); }
-    void end(MatrixStack matrices);
+    void end(Matrix4 matrices);
 }

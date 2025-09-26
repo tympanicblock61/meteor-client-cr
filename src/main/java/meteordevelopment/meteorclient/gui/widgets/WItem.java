@@ -5,8 +5,9 @@
 
 package meteordevelopment.meteorclient.gui.widgets;
 
+import finalforeach.cosmicreach.items.ItemStack;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
-import net.minecraft.item.ItemStack;
+//import net.minecraft.item.ItemStack;
 
 public class WItem extends WWidget {
     protected ItemStack itemStack;
@@ -25,7 +26,7 @@ public class WItem extends WWidget {
 
     @Override
     protected void onRender(GuiRenderer renderer, double mouseX, double mouseY, double delta) {
-        if (!itemStack.isEmpty()) {
+        if (itemStack.amount > 0) { // check empty
             renderer.post(() -> {
                 double s = theme.scale(2);
                 renderer.item(itemStack, (int) x, (int) y, (float) s, true);

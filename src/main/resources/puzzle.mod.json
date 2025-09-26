@@ -1,0 +1,44 @@
+{
+  "formatVersion": 0,
+  "name": "Meteor Client",
+  "id": "meteor-client",
+  "description": "Based utility mod.",
+  "authors": [
+    "MineGame159",
+    "squidoodly",
+    "seasnail",
+    "Tympanicblock61"
+  ],
+  "meta": {
+    "icon": "assets/meteor-client/icon.png",
+    "meteor-client:build_number": "${build_number}",
+    "meteor-client:color": "145,61,226",
+    "meteor-client:commit": "${commit}",
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://meteorclient.com/discord"
+      }
+    }
+  },
+  "entrypoints": {
+    "client_init": [
+      "meteordevelopment.meteorclient.MeteorClient"
+    ]
+  },
+  "mixins": [
+    "meteor-client.mixins.json",
+  ],
+  "dependencies": {
+    "cosmic-reach": ">=${cosmic_reach_version}",
+    "puzzle-loader": ">=${puzzle_loader_version}"
+  },
+  "breaks": {
+    "optifabric": "*",
+    "feather": "*",
+    "origins": "*",
+    "wurst": "*",
+    "sodium": "<0.6.5",
+    "morechathistory": "*"
+  },
+  "accessWidener": "meteor-client.accesswidener"
+}

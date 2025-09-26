@@ -5,7 +5,9 @@
 
 package meteordevelopment.meteorclient.events.world;
 
-import net.minecraft.block.BlockState;
+//import net.minecraft.block.BlockState;
+
+import finalforeach.cosmicreach.blocks.BlockState;
 
 public class BlockActivateEvent {
     private static final BlockActivateEvent INSTANCE = new BlockActivateEvent();

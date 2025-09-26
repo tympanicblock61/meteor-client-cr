@@ -5,7 +5,10 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.nbt.NbtCompound;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+//import net.minecraft.nbt.NbtCompound;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,16 +47,14 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        tag.putString("value", get().toString());
-
+    public DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new StringDataAttribute(get().toString())));
         return tag;
     }
 
     @Override
-    public T load(NbtCompound tag) {
-        parse(tag.getString("value"));
-
+    public T load(DataTagManifest tag) {
+        parse(tag.getTag("value").getTagAsType(String.class).getValue());
         return get();
     }
 

@@ -5,10 +5,16 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.BooleanDataAttribute;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -50,31 +56,33 @@ public class SettingGroup implements ISerializable<SettingGroup>, Iterable<Setti
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-
-        tag.putString("name", name);
-        tag.putBoolean("sectionExpanded", sectionExpanded);
-
-        NbtList settingsTag = new NbtList();
-        for (Setting<?> setting : this) if (setting.wasChanged()) settingsTag.add(setting.toTag());
-        tag.put("settings", settingsTag);
-
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("name", new StringDataAttribute(name)));
+        tag.addTag(new DataTag<>("sectionExpanded", new BooleanDataAttribute(sectionExpanded)));
+        ListDataAttribute<DataTagManifestAttribute> settingsTag = new ListDataAttribute<>();
+        List<DataTagManifestAttribute> list_ = new ArrayList<>();
+        for (Setting<?> setting : this) {
+            if (setting.wasChanged()) {
+                list_.add(new DataTagManifestAttribute(setting.toTag()));
+            }
+        }
+        settingsTag.setValue(list_);
+        tag.addTag(new DataTag<>("settings", settingsTag));
         return tag;
     }
 
     @Override
-    public SettingGroup fromTag(NbtCompound tag) {
-        sectionExpanded = tag.getBoolean("sectionExpanded");
+    public SettingGroup fromTag(DataTagManifest tag) {
+        sectionExpanded = tag.getTag("sectionExpanded").getTagAsType(Boolean.TYPE).getValue();
+        List<DataTagManifestAttribute> settingsTag = tag.getTag("settings").getTagAsType((Class<List<DataTagManifestAttribute>>) (Class<?>) List.class).getValue();
+        for (DataTagManifestAttribute t : settingsTag) {
+            DataTagManifest settingTag = t.getValue();
 
-        NbtList settingsTag = tag.getList("settings", 10);
-        for (NbtElement t : settingsTag) {
-            NbtCompound settingTag = (NbtCompound) t;
 
-            Setting<?> setting = get(settingTag.getString("name"));
+            Setting<?> setting = get(settingTag.getTag("name").getTagAsType(String.class).getValue());
             if (setting != null) setting.fromTag(settingTag);
         }
-
         return this;
     }
 }

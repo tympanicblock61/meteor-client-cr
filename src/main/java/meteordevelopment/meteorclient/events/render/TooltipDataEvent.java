@@ -5,14 +5,18 @@
 
 package meteordevelopment.meteorclient.events.render;
 
-import net.minecraft.item.tooltip.TooltipData;
-import net.minecraft.item.ItemStack;
+//import net.minecraft.item.tooltip.TooltipData;
+//import net.minecraft.item.ItemStack;
 
+
+import finalforeach.cosmicreach.items.ItemStack;
+
+import java.util.List;
 
 public class TooltipDataEvent {
     private static final TooltipDataEvent INSTANCE = new TooltipDataEvent();
 
-    public TooltipData tooltipData;
+    public List<String> tooltipData;
     public ItemStack itemStack;
 
     public static TooltipDataEvent get(ItemStack itemStack) {

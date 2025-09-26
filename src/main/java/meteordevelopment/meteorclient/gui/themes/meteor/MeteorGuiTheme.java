@@ -5,6 +5,9 @@
 
 package meteordevelopment.meteorclient.gui.themes.meteor;
 
+import com.badlogic.gdx.Gdx;
+import finalforeach.cosmicreach.gamestates.GameState;
+import finalforeach.cosmicreach.ui.UI;
 import meteordevelopment.meteorclient.gui.DefaultSettingsWidgetFactory;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WidgetScreen;
@@ -26,13 +29,10 @@ import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.*;
 import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.accounts.Account;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-import static net.minecraft.client.MinecraftClient.IS_SYSTEM_MAC;
+import org.apache.commons.lang3.SystemUtils;
 
 public class MeteorGuiTheme extends GuiTheme {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -55,7 +55,7 @@ public class MeteorGuiTheme extends GuiTheme {
         .sliderRange(0.75, 4)
         .onSliderRelease()
         .onChanged(aDouble -> {
-            if (mc.currentScreen instanceof WidgetScreen) ((WidgetScreen) mc.currentScreen).invalidate();
+            if (GameState.currentGameState instanceof WidgetScreen) ((WidgetScreen) GameState.currentGameState).invalidate();
         })
         .build()
     );
@@ -79,7 +79,7 @@ public class MeteorGuiTheme extends GuiTheme {
         .description("Hide HUD when in GUI.")
         .defaultValue(false)
         .onChanged(v -> {
-            if (mc.currentScreen instanceof WidgetScreen) mc.options.hudHidden = v;
+            if (GameState.currentGameState instanceof WidgetScreen) UI.renderUI = v;
         })
         .build()
     );
@@ -261,11 +261,6 @@ public class MeteorGuiTheme extends GuiTheme {
     }
 
     @Override
-    public WAccount account(WidgetScreen screen, Account<?> account) {
-        return w(new WMeteorAccount(screen, account));
-    }
-
-    @Override
     public WWidget module(Module module) {
         return w(new WMeteorModule(module));
     }
@@ -360,8 +355,8 @@ public class MeteorGuiTheme extends GuiTheme {
     public double scale(double value) {
         double scaled = value * scale.get();
 
-        if (IS_SYSTEM_MAC) {
-            scaled /= (double) mc.getWindow().getWidth() / mc.getWindow().getFramebufferWidth();
+        if (SystemUtils.IS_OS_MAC_OSX) {
+            scaled /= (double) Gdx.graphics.getWidth() / Gdx.graphics.getBackBufferWidth();
         }
 
         return scaled;

@@ -5,6 +5,9 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.meteor.KeyEvent;
 import meteordevelopment.meteorclient.events.meteor.MouseButtonEvent;
@@ -13,7 +16,7 @@ import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.misc.input.KeyAction;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
@@ -24,7 +27,6 @@ public class KeybindSetting extends Setting<Keybind> {
 
     public KeybindSetting(String name, String description, Keybind defaultValue, Consumer<Keybind> onChanged, Consumer<Setting<Keybind>> onModuleActivated, IVisible visible, Runnable action) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
-
         this.action = action;
         MeteorClient.EVENT_BUS.subscribe(this);
     }
@@ -78,16 +80,14 @@ public class KeybindSetting extends Setting<Keybind> {
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        tag.put("value", get().toTag());
-
+    public DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new DataTagManifestAttribute(get().toTag())));
         return tag;
     }
 
     @Override
-    public Keybind load(NbtCompound tag) {
-        get().fromTag(tag.getCompound("value"));
-
+    public Keybind load(DataTagManifest tag) {
+        get().fromTag(tag.getTag("value").getTagAsType(DataTagManifest.class).getValue());
         return get();
     }
 

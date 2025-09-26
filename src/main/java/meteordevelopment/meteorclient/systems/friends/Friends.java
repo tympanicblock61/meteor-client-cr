@@ -5,15 +5,21 @@
 
 package meteordevelopment.meteorclient.systems.friends;
 
-import com.mojang.util.UndashedUuid;
+//import com.mojang.util.UndashedUuid;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.entities.player.PlayerEntity;
 import meteordevelopment.meteorclient.systems.System;
 import meteordevelopment.meteorclient.systems.Systems;
-import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+//import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+import meteordevelopment.meteorclient.utils.misc.DataTagUtils;
 import meteordevelopment.meteorclient.utils.network.MeteorExecutor;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+//import net.minecraft.client.network.PlayerListEntry;
+//import net.minecraft.entity.player.PlayerEntity;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -65,19 +71,11 @@ public class Friends extends System<Friends> implements Iterable<Friend> {
     }
 
     public Friend get(PlayerEntity player) {
-        return get(player.getName().getString());
-    }
-
-    public Friend get(PlayerListEntry player) {
-        return get(player.getProfile().getName());
+        return get(player.player.getAccount().getDisplayName());
     }
 
     public boolean isFriend(PlayerEntity player) {
         return player != null && get(player) != null;
-    }
-
-    public boolean isFriend(PlayerListEntry player) {
-        return get(player) != null;
     }
 
     public boolean shouldAttack(PlayerEntity player) {
@@ -98,28 +96,32 @@ public class Friends extends System<Friends> implements Iterable<Friend> {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
 
-        tag.put("friends", NbtUtils.listToTag(friends));
+        tag.addTag(new DataTag<>("friends", DataTagUtils.listToTag(friends)));
 
         return tag;
     }
 
     @Override
-    public Friends fromTag(NbtCompound tag) {
+    public Friends fromTag(DataTagManifest tag) {
         friends.clear();
 
-        for (NbtElement itemTag : tag.getList("friends", 10)) {
-            NbtCompound friendTag = (NbtCompound) itemTag;
-            if (!friendTag.contains("name")) continue;
+        List<DataTagManifestAttribute> friends_ = tag.getTag("friends").getTagAsType((Class<List<DataTagManifestAttribute>>) (Class<?>) List.class).getValue();
 
-            String name = friendTag.getString("name");
+
+
+        for (DataTagManifestAttribute itemTag : friends_) {
+            DataTagManifest friendTag = itemTag.getValue();
+            if (!friendTag.hasTag("name")) continue;
+
+            String name = friendTag.getTag("name").getTagAsType(String.class).getValue();
             if (get(name) != null) continue;
 
-            String uuid = friendTag.getString("id");
-            Friend friend = !uuid.isBlank()
-                ? new Friend(name, UndashedUuid.fromStringLenient(uuid))
+            String id = friendTag.getTag("id").getTagAsType(String.class).getValue();
+            Friend friend = !id.isBlank()
+                ? new Friend(name, id)
                 : new Friend(name);
 
             friends.add(friend);

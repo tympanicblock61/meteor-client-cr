@@ -5,14 +5,16 @@
 
 package meteordevelopment.meteorclient.events.packets;
 
-import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
+//import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
+
+import finalforeach.cosmicreach.networking.packets.items.SlotSyncPacket;
 
 public class ContainerSlotUpdateEvent {
     private static final ContainerSlotUpdateEvent INSTANCE = new ContainerSlotUpdateEvent();
 
-    public ScreenHandlerSlotUpdateS2CPacket packet;
+    public SlotSyncPacket packet;
 
-    public static ContainerSlotUpdateEvent get(ScreenHandlerSlotUpdateS2CPacket packet) {
+    public static ContainerSlotUpdateEvent get(SlotSyncPacket packet) {
         INSTANCE.packet = packet;
         return INSTANCE;
     }

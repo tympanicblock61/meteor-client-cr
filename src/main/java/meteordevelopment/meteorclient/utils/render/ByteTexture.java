@@ -5,79 +5,55 @@
 
 package meteordevelopment.meteorclient.utils.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.texture.AbstractTexture;
-import org.lwjgl.BufferUtils;
+//import com.mojang.blaze3d.systems.RenderSystem;
+//import net.minecraft.client.texture.AbstractTexture;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.opengl.GL30C.*;
 
-public class ByteTexture extends AbstractTexture {
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Pixmap.Format;
+import com.badlogic.gdx.utils.BufferUtils;
+
+public class ByteTexture extends Texture {
     public ByteTexture(int width, int height, byte[] data, Format format, Filter filterMin, Filter filterMag) {
-        if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(() -> upload(width, height, data, format, filterMin, filterMag));
-        } else {
-            upload(width, height, data, format, filterMin, filterMag);
-        }
+        super(createPixmap(width, height, data, format));
+        setFilter(filterMin.toGdx(), filterMag.toGdx());
     }
 
     public ByteTexture(int width, int height, ByteBuffer buffer, Format format, Filter filterMin, Filter filterMag) {
-        if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(() -> upload(width, height, buffer, format, filterMin, filterMag));
-        } else {
-            upload(width, height, buffer, format, filterMin, filterMag);
-        }
+        super(createPixmap(width, height, buffer, format));
+        setFilter(filterMin.toGdx(), filterMag.toGdx());
     }
 
-    private void upload(int width, int height, byte[] data, Format format, Filter filterMin, Filter filterMag) {
-        ByteBuffer buffer = BufferUtils.createByteBuffer(data.length).put(data);
-
-        upload(width, height, buffer, format, filterMin, filterMag);
+    private static Pixmap createPixmap(int width, int height, byte[] data, Format format) {
+        ByteBuffer buffer = BufferUtils.newUnsafeByteBuffer(data.length);
+        buffer.put(data).flip();
+        return createPixmap(width, height, buffer, format);
     }
 
-    private void upload(int width, int height, ByteBuffer buffer, Format format, Filter filterMin, Filter filterMag) {
-        bindTexture();
-
-        glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
-        glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-        glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-        glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-        glPixelStorei(GL_UNPACK_SKIP_IMAGES, 0);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMin.toOpenGL());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMag.toOpenGL());
-
-        ((Buffer) buffer).rewind();
-        glTexImage2D(GL_TEXTURE_2D, 0, format.toOpenGL(), width, height, 0, format.toOpenGL(), GL_UNSIGNED_BYTE, buffer);
-    }
-
-    public enum Format {
-        A,
-        RGB,
-        RGBA;
-
-        public int toOpenGL() {
-            return switch (this) {
-                case A -> GL_RED;
-                case RGB -> GL_RGB;
-                case RGBA -> GL_RGBA;
-            };
-        }
+    private static Pixmap createPixmap(int width, int height, ByteBuffer buffer, Format format) {
+        Pixmap pixmap = new Pixmap(width, height, format);
+        ByteBuffer pixmapPixels = pixmap.getPixels();
+        pixmapPixels.clear();
+        pixmapPixels.put(buffer);
+        pixmapPixels.flip();
+        return pixmap;
     }
 
     public enum Filter {
-        Nearest,
-        Linear;
+        Nearest(TextureFilter.Nearest),
+        Linear(TextureFilter.Linear);
 
-        public int toOpenGL() {
-            return this == Nearest ? GL_NEAREST : GL_LINEAR;
+        private final TextureFilter gdxFilter;
+
+        Filter(TextureFilter gdxFilter) {
+            this.gdxFilter = gdxFilter;
+        }
+
+        public TextureFilter toGdx() {
+            return gdxFilter;
         }
     }
 }

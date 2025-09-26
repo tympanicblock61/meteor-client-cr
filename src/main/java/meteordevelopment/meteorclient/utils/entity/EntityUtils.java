@@ -5,146 +5,171 @@
 
 package meteordevelopment.meteorclient.utils.entity;
 
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
+import finalforeach.cosmicreach.GameSingletons;
+import finalforeach.cosmicreach.blockentities.BlockEntity;
+import finalforeach.cosmicreach.blocks.Block;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+import finalforeach.cosmicreach.blocks.BlockState;
+import finalforeach.cosmicreach.constants.Direction;
+import finalforeach.cosmicreach.entities.*;
+import finalforeach.cosmicreach.entities.player.Gamemode;
+import finalforeach.cosmicreach.entities.player.PlayerEntity;
+import finalforeach.cosmicreach.gamestates.GameState;
+import finalforeach.cosmicreach.gamestates.InGame;
+import finalforeach.cosmicreach.settings.ControlSettings;
+import finalforeach.cosmicreach.settings.GraphicsSettings;
+import finalforeach.cosmicreach.util.Identifier;
+import finalforeach.cosmicreach.world.World;
+import finalforeach.cosmicreach.world.Zone;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongBidirectionalIterator;
 import it.unimi.dsi.fastutil.longs.LongSortedSet;
-import meteordevelopment.meteorclient.mixin.EntityTrackingSectionAccessor;
-import meteordevelopment.meteorclient.mixin.SectionedEntityCacheAccessor;
-import meteordevelopment.meteorclient.mixin.SimpleEntityLookupAccessor;
-import meteordevelopment.meteorclient.mixin.WorldAccessor;
+//import meteordevelopment.meteorclient.mixin.EntityTrackingSectionAccessor;
+//import meteordevelopment.meteorclient.mixin.SectionedEntityCacheAccessor;
+//import meteordevelopment.meteorclient.mixin.SimpleEntityLookupAccessor;
+//import meteordevelopment.meteorclient.mixin.WorldAccessor;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.entity.vehicle.ChestBoatEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.entity.EntityLookup;
-import net.minecraft.world.entity.EntityTrackingSection;
-import net.minecraft.world.entity.SectionedEntityCache;
-import net.minecraft.world.entity.SimpleEntityLookup;
+//import net.minecraft.block.Block;
+//import net.minecraft.block.BlockState;
+//import net.minecraft.block.Blocks;
+//import net.minecraft.block.entity.BlockEntity;
+//import net.minecraft.client.network.PlayerListEntry;
+//import net.minecraft.entity.Entity;
+//import net.minecraft.entity.EntityType;
+//import net.minecraft.entity.LivingEntity;
+//import net.minecraft.entity.player.PlayerEntity;
+//import net.minecraft.entity.vehicle.BoatEntity;
+//import net.minecraft.entity.vehicle.ChestBoatEntity;
+//import net.minecraft.fluid.Fluid;
+//import net.minecraft.fluid.Fluids;
+//import net.minecraft.util.math.BlockPos;
+//import net.minecraft.util.math.Box;
+//import net.minecraft.util.math.ChunkSectionPos;
+//import net.minecraft.util.math.Direction;
+//import net.minecraft.world.GameMode;
+//import net.minecraft.world.entity.EntityLookup;
+//import net.minecraft.world.entity.EntityTrackingSection;
+//import net.minecraft.world.entity.SectionedEntityCache;
+//import net.minecraft.world.entity.SimpleEntityLookup;
 
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class EntityUtils {
-    private static final BlockPos.Mutable testPos = new BlockPos.Mutable();
+    private static final BlockPosition testPos = BlockPosition.ofGlobalZoneless(0,0,0);
 
     private EntityUtils() {
     }
 
-    public static boolean isAttackable(EntityType<?> type) {
-        return type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.ARROW && type != EntityType.FALLING_BLOCK && type != EntityType.FIREWORK_ROCKET && type != EntityType.ITEM && type != EntityType.LLAMA_SPIT && type != EntityType.SPECTRAL_ARROW && type != EntityType.ENDER_PEARL && type != EntityType.EXPERIENCE_BOTTLE && type != EntityType.POTION && type != EntityType.TRIDENT && type != EntityType.LIGHTNING_BOLT && type != EntityType.FISHING_BOBBER && type != EntityType.EXPERIENCE_ORB && type != EntityType.EGG;
+    public static float eyePosition(Entity entity) {
+        return entity.position.y + entity.viewPositionOffset.y;
     }
 
-    public static boolean isRideable(EntityType<?> type) {
-        return type == EntityType.MINECART || BoatEntity.class.isAssignableFrom(type.getBaseClass()) || ChestBoatEntity.class.isAssignableFrom(type.getBaseClass()) || type == EntityType.CAMEL || type == EntityType.DONKEY || type == EntityType.HORSE || type == EntityType.LLAMA || type == EntityType.MULE || type == EntityType.PIG || type == EntityType.SKELETON_HORSE || type == EntityType.STRIDER || type == EntityType.ZOMBIE_HORSE;
+    public static boolean isAttackable(Class<? extends Entity> type) {
+        return type != ItemEntity.class && type != EntityLaserProjectile.class;
     }
 
-    public static float getTotalHealth(LivingEntity target) {
-        return target.getHealth() + target.getAbsorptionAmount();
+    public static boolean isRideable(Class<? extends Entity> type) {
+        return false;//type == EntityType.MINECART || BoatEntity.class.isAssignableFrom(type.getBaseClass()) || ChestBoatEntity.class.isAssignableFrom(type.getBaseClass()) || type == EntityType.CAMEL || type == EntityType.DONKEY || type == EntityType.HORSE || type == EntityType.LLAMA || type == EntityType.MULE || type == EntityType.PIG || type == EntityType.SKELETON_HORSE || type == EntityType.STRIDER || type == EntityType.ZOMBIE_HORSE;
+    }
+
+    public static float getTotalHealth(Entity target) {
+        return target.hitpoints - target.getPendingDamage();
     }
 
     public static int getPing(PlayerEntity player) {
-        if (mc.getNetworkHandler() == null) return 0;
 
-        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
-        if (playerListEntry == null) return 0;
-        return playerListEntry.getLatency();
+        return 0;
+        //TODO fix, cannot do rn
+//        if (mc.getNetworkHandler() == null) return 0;
+//
+//        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
+//        if (playerListEntry == null) return 0;
+//        return playerListEntry.getLatency();
     }
 
-    public static GameMode getGameMode(PlayerEntity player) {
-        if (player == null) return null;
-        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
-        if (playerListEntry == null) return null;
-        return playerListEntry.getGameMode();
+    public static Gamemode getGameMode(PlayerEntity player) {
+//        if (player == null) return null;
+//        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
+//        if (playerListEntry == null) return null;
+//        return playerListEntry.getGameMode();
+        return player.player.gamemode;
     }
 
     public static boolean isAboveWater(Entity entity) {
-        BlockPos.Mutable blockPos = entity.getBlockPos().mutableCopy();
-
+        Vector3 pos = entity.getPosition();
         for (int i = 0; i < 64; i++) {
-            BlockState state = mc.world.getBlockState(blockPos);
-
-            if (state.blocksMovement()) break;
-
-            Fluid fluid = state.getFluidState().getFluid();
-            if (fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER) {
+            BlockState state = entity.zone.getBlockState(pos);;
+            if (!state.walkThrough) break;
+            if (state.getBlock() == Block.WATER) {
                 return true;
             }
-
-            blockPos.move(0, -1, 0);
+            pos.add(0, -1, 0);
         }
-
         return false;
     }
 
     public static boolean isInRenderDistance(Entity entity) {
         if (entity == null) return false;
-        return isInRenderDistance(entity.getX(), entity.getZ());
+        return isInRenderDistance(entity.position.x, entity.position.z);
     }
 
     public static boolean isInRenderDistance(BlockEntity entity) {
         if (entity == null) return false;
-        return isInRenderDistance(entity.getPos().getX(), entity.getPos().getZ());
+        return isInRenderDistance(entity.getGlobalX(), entity.getGlobalZ());
     }
 
-    public static boolean isInRenderDistance(BlockPos pos) {
+    public static boolean isInRenderDistance(BlockPosition pos) {
         if (pos == null) return false;
-        return isInRenderDistance(pos.getX(), pos.getZ());
+        return isInRenderDistance(pos.getGlobalX(), pos.getGlobalZ());
     }
 
     public static boolean isInRenderDistance(double posX, double posZ) {
-        double x = Math.abs(mc.gameRenderer.getCamera().getPos().x - posX);
-        double z = Math.abs(mc.gameRenderer.getCamera().getPos().z - posZ);
-        double d = (mc.options.getViewDistance().getValue() + 1) * 16;
+        Camera camera = PlayerUtils.playerCamera();
+
+        double x = Math.abs(camera.position.x - posX);
+        double z = Math.abs(camera.position.z - posZ);
+        double d = (GraphicsSettings.renderDistanceInChunks.getValue() + 1) * 16;
 
         return x < d && z < d;
     }
 
-    public static BlockPos getCityBlock(PlayerEntity player) {
-        if (player == null) return null;
-
-        double bestDistanceSquared = 6 * 6;
-        Direction bestDirection = null;
-
-        for (Direction direction : Direction.HORIZONTAL) {
-            testPos.set(player.getBlockPos().offset(direction));
-
-            Block block = mc.world.getBlockState(testPos).getBlock();
-            if (block != Blocks.OBSIDIAN && block != Blocks.NETHERITE_BLOCK && block != Blocks.CRYING_OBSIDIAN
-                && block != Blocks.RESPAWN_ANCHOR && block != Blocks.ANCIENT_DEBRIS) continue;
-
-            double testDistanceSquared = PlayerUtils.squaredDistanceTo(testPos);
-            if (testDistanceSquared < bestDistanceSquared) {
-                bestDistanceSquared = testDistanceSquared;
-                bestDirection = direction;
-            }
-        }
-
-        if (bestDirection == null) return null;
-        return player.getBlockPos().offset(bestDirection);
-    }
+//    public static BlockPosition getCityBlock(PlayerEntity player) {
+//        if (player == null) return null;
+//
+//        double bestDistanceSquared = 6 * 6;
+//        Direction bestDirection = null;
+//
+//        for (Direction direction : new Direction[]{Direction.POS_X, Direction.NEG_X}) {
+//            BlockPosition playerBlockPos = BlockPosition.ofGlobal(player.zone,(int)Math.floor(player.position.x), (int)Math.floor(player.position.y), (int)Math.floor(player.position.z));
+//            testPos.set(playerBlockPos.getOffsetBlockPos(player.zone, direction));
+//
+//            Block block = player.zone.getBlockState(testPos.getGlobalX(),testPos.getGlobalY(),testPos.getGlobalZ()).getBlock();
+//            if (block != Blocks.OBSIDIAN && block != Blocks.NETHERITE_BLOCK && block != Blocks.CRYING_OBSIDIAN
+//                && block != Blocks.RESPAWN_ANCHOR && block != Blocks.ANCIENT_DEBRIS) continue;
+//
+//            double testDistanceSquared = PlayerUtils.squaredDistanceTo(testPos);
+//            if (testDistanceSquared < bestDistanceSquared) {
+//                bestDistanceSquared = testDistanceSquared;
+//                bestDirection = direction;
+//            }
+//        }
+//
+//        if (bestDirection == null) return null;
+//        return player.getBlockPos().offset(bestDirection);
+//    }
 
     public static String getName(Entity entity) {
         if (entity == null) return null;
-        if (entity instanceof PlayerEntity) return entity.getName().getString();
-        return entity.getType().getName().getString();
+        if (entity instanceof PlayerEntity) return ((PlayerEntity) entity).player.getAccount().getDisplayName();
+        return Identifier.of(entity.entityTypeId).getName();
     }
 
     public static Color getColorFromDistance(Entity entity) {
@@ -172,58 +197,15 @@ public class EntityUtils {
         return distanceColor;
     }
 
-    public static boolean intersectsWithEntity(Box box, Predicate<Entity> predicate) {
-        EntityLookup<Entity> entityLookup = ((WorldAccessor) mc.world).getEntityLookup();
-
-        // Fast implementation using SimpleEntityLookup that returns on the first intersecting entity
-        if (entityLookup instanceof SimpleEntityLookup<Entity> simpleEntityLookup) {
-            SectionedEntityCache<Entity> cache = ((SimpleEntityLookupAccessor) simpleEntityLookup).getCache();
-            LongSortedSet trackedPositions = ((SectionedEntityCacheAccessor) cache).getTrackedPositions();
-            Long2ObjectMap<EntityTrackingSection<Entity>> trackingSections = ((SectionedEntityCacheAccessor) cache).getTrackingSections();
-
-            int i = ChunkSectionPos.getSectionCoord(box.minX - 2);
-            int j = ChunkSectionPos.getSectionCoord(box.minY - 2);
-            int k = ChunkSectionPos.getSectionCoord(box.minZ - 2);
-            int l = ChunkSectionPos.getSectionCoord(box.maxX + 2);
-            int m = ChunkSectionPos.getSectionCoord(box.maxY + 2);
-            int n = ChunkSectionPos.getSectionCoord(box.maxZ + 2);
-
-            for (int o = i; o <= l; o++) {
-                long p = ChunkSectionPos.asLong(o, 0, 0);
-                long q = ChunkSectionPos.asLong(o, -1, -1);
-                LongBidirectionalIterator longIterator = trackedPositions.subSet(p, q + 1).iterator();
-
-                while (longIterator.hasNext()) {
-                    long r = longIterator.nextLong();
-                    int s = ChunkSectionPos.unpackY(r);
-                    int t = ChunkSectionPos.unpackZ(r);
-
-                    if (s >= j && s <= m && t >= k && t <= n) {
-                        EntityTrackingSection<Entity> entityTrackingSection = trackingSections.get(r);
-
-                        if (entityTrackingSection != null && entityTrackingSection.getStatus().shouldTrack()) {
-                            for (Entity entity : ((EntityTrackingSectionAccessor) entityTrackingSection).<Entity>getCollection()) {
-                                if (entity.getBoundingBox().intersects(box) && predicate.test(entity)) return true;
-                            }
-                        }
-                    }
+    public static boolean intersectsWithEntity(BoundingBox box, Predicate<Entity> predicate) {
+        Collection<Zone> zones = GameSingletons.world.getZones();
+        for (Zone zone : zones) {
+            for (Entity entity : zone.getAllEntities()) {
+                if (entity.globalBoundingBox.intersects(box) && predicate.test(entity)) {
+                    return true;
                 }
             }
-
-            return false;
         }
-
-        // Slow implementation that loops every entity if for some reason the EntityLookup implementation is changed
-        AtomicBoolean found = new AtomicBoolean(false);
-
-        entityLookup.forEachIntersects(box, entity -> {
-            if (!found.get() && predicate.test(entity)) found.set(true);
-        });
-
-        return found.get();
-    }
-
-    public static EntityType<?> getGroup(Entity entity) {
-        return entity.getType();
+        return false;
     }
 }

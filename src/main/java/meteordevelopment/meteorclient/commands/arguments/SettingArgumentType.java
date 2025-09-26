@@ -6,6 +6,7 @@
 package meteordevelopment.meteorclient.commands.arguments;
 
 import com.google.common.collect.Streams;
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -15,15 +16,16 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
+import meteordevelopment.stolen.CommandSource;
+//import net.minecraft.command.CommandSource;
+//import net.minecraft.text.Text;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 public class SettingArgumentType implements ArgumentType<String> {
     private static final SettingArgumentType INSTANCE = new SettingArgumentType();
-    private static final DynamicCommandExceptionType NO_SUCH_SETTING = new DynamicCommandExceptionType(name -> Text.literal("No such setting '" + name + "'."));
+    private static final DynamicCommandExceptionType NO_SUCH_SETTING = new DynamicCommandExceptionType(name -> new LiteralMessage("No such setting '" + name + "'."));
 
     public static SettingArgumentType create() {
         return INSTANCE;

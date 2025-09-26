@@ -5,6 +5,10 @@
 
 package meteordevelopment.meteorclient.gui.screens.settings;
 
+import com.github.puzzle.game.PuzzleRegistries;
+import com.github.puzzle.game.block.IModBlock;
+import finalforeach.cosmicreach.blocks.Block;
+import finalforeach.cosmicreach.items.ItemStack;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.widgets.WItemWithLabel;
@@ -13,9 +17,6 @@ import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.BlockSetting;
 import meteordevelopment.meteorclient.utils.misc.Names;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.registry.Registries;
 import org.apache.commons.lang3.StringUtils;
 
 public class BlockSettingScreen extends WindowScreen {
@@ -49,18 +50,19 @@ public class BlockSettingScreen extends WindowScreen {
     }
 
     private void initTable() {
-        for (Block block : Registries.BLOCK) {
-            if (setting.filter != null && !setting.filter.test(block)) continue;
-            if (skipValue(block)) continue;
+        for (IModBlock block : PuzzleRegistries.BLOCKS) {
+            if (setting.filter != null && !setting.filter.test((Block) block)) continue;
+            if (skipValue((Block) block)) continue;
 
-            WItemWithLabel item = theme.itemWithLabel(block.asItem().getDefaultStack(), Names.get(block));
+            WItemWithLabel item = theme.itemWithLabel(new ItemStack(((Block) block).getDefaultBlockState().getItem()), Names.get(((Block) block).getDefaultBlockState().getItem()));
             if (!filterText.isEmpty() && !StringUtils.containsIgnoreCase(item.getLabelText(), filterText)) continue;
             table.add(item);
 
             WButton select = table.add(theme.button("Select")).expandCellX().right().widget();
             select.action = () -> {
-                setting.set(block);
+                setting.set((Block) block);
                 close();
+                this.onClosed();
             };
 
             table.row();
@@ -68,6 +70,16 @@ public class BlockSettingScreen extends WindowScreen {
     }
 
     protected boolean skipValue(Block value) {
-        return value == Blocks.AIR || Registries.BLOCK.getId(value).getPath().endsWith("_wall_banner");
+        return value == Block.AIR;
+    }
+
+    @Override
+    public boolean touchCancelled(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
+        return false;
     }
 }

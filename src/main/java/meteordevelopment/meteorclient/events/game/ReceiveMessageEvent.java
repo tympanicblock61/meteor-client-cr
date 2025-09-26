@@ -5,19 +5,20 @@
 
 package meteordevelopment.meteorclient.events.game;
 
+import finalforeach.cosmicreach.accounts.Account;
 import meteordevelopment.meteorclient.events.Cancellable;
-import net.minecraft.client.gui.hud.MessageIndicator;
-import net.minecraft.text.Text;
+//import net.minecraft.client.gui.hud.MessageIndicator;
+//import net.minecraft.text.Text;
 
 public class ReceiveMessageEvent extends Cancellable {
     private static final ReceiveMessageEvent INSTANCE = new ReceiveMessageEvent();
 
-    private Text message;
-    private MessageIndicator indicator;
+    private String message;
+    private Account indicator;
     private boolean modified;
     public int id;
 
-    public static ReceiveMessageEvent get(Text message, MessageIndicator indicator, int id) {
+    public static ReceiveMessageEvent get(String message, Account indicator, int id) {
         INSTANCE.setCancelled(false);
         INSTANCE.message = message;
         INSTANCE.indicator = indicator;
@@ -26,20 +27,20 @@ public class ReceiveMessageEvent extends Cancellable {
         return INSTANCE;
     }
 
-    public Text getMessage() {
+    public String getMessage() {
         return message;
     }
 
-    public MessageIndicator getIndicator() {
+    public Account getIndicator() {
         return indicator;
     }
 
-    public void setMessage(Text message) {
+    public void setMessage(String message) {
         this.message = message;
         this.modified = true;
     }
 
-    public void setIndicator(MessageIndicator indicator) {
+    public void setIndicator(Account indicator) {
         this.indicator = indicator;
         this.modified = true;
     }

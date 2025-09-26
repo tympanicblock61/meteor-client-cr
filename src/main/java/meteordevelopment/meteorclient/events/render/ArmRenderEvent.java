@@ -6,18 +6,18 @@
 package meteordevelopment.meteorclient.events.render;
 
 
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Hand;
+//import net.minecraft.client.util.math.MatrixStack;
+//import net.minecraft.util.Hand;
+
+import com.badlogic.gdx.math.Matrix4;
 
 public class ArmRenderEvent {
     public static ArmRenderEvent INSTANCE = new ArmRenderEvent();
 
-    public MatrixStack matrix;
-    public Hand hand;
+    public Matrix4 matrix;
 
-    public static ArmRenderEvent get(Hand hand, MatrixStack matrices) {
+    public static ArmRenderEvent get(Matrix4 matrices) {
         INSTANCE.matrix = matrices;
-        INSTANCE.hand = hand;
 
         return INSTANCE;
     }

@@ -5,8 +5,11 @@
 
 package meteordevelopment.meteorclient.systems.modules;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+//import net.minecraft.item.ItemStack;
+//import net.minecraft.item.Items;
+
+import finalforeach.cosmicreach.items.Item;
+import finalforeach.cosmicreach.items.ItemStack;
 
 public class Category {
     public final String name;
@@ -16,7 +19,7 @@ public class Category {
     public Category(String name, ItemStack icon) {
         this.name = name;
         this.nameHash = name.hashCode();
-        this.icon = icon == null ? Items.AIR.getDefaultStack() : icon;
+        this.icon = icon == null ? new ItemStack(Item.getItem("base:air")) : icon;
     }
     public Category(String name) {
         this(name, null);

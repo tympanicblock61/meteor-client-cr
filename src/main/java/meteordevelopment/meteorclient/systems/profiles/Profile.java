@@ -5,6 +5,9 @@
 
 package meteordevelopment.meteorclient.systems.profiles;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.macros.Macros;
@@ -12,8 +15,8 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.waypoints.Waypoints;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -70,8 +73,8 @@ public class Profile implements ISerializable<Profile> {
     );
 
     public Profile() {}
-    public Profile(NbtElement tag) {
-        fromTag((NbtCompound) tag);
+    public Profile(DataTagManifest tag) {
+        fromTag((DataTagManifest) tag);
     }
 
     public void load() {
@@ -105,20 +108,17 @@ public class Profile implements ISerializable<Profile> {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-
-        tag.put("settings", settings.toTag());
-
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("settings", new DataTagManifestAttribute(settings.toTag())));
         return tag;
     }
 
     @Override
-    public Profile fromTag(NbtCompound tag) {
-        if (tag.contains("settings")) {
-            settings.fromTag(tag.getCompound("settings"));
+    public Profile fromTag(DataTagManifest tag) {
+        if (tag.hasTag("settings")) {
+            settings.fromTag(tag.getTag("settings").getTagAsType(DataTagManifest.class).getValue());
         }
-
         return this;
     }
 

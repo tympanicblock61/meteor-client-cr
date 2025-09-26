@@ -9,23 +9,26 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import finalforeach.cosmicreach.ClientSingletons;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.CommandSource;
-import net.minecraft.registry.BuiltinRegistries;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.text.Text;
+import meteordevelopment.stolen.ClientCommandSource;
+import meteordevelopment.stolen.CommandSource;
+//import net.minecraft.client.MinecraftClient;
+//import net.minecraft.command.CommandRegistryAccess;
+//import net.minecraft.command.CommandSource;
+//import net.minecraft.registry.BuiltinRegistries;
+//import net.minecraft.server.command.CommandManager;
+//import net.minecraft.text.Text;
 
 import java.util.List;
 
 public abstract class Command {
-    protected static final CommandRegistryAccess REGISTRY_ACCESS = CommandManager.createRegistryAccess(BuiltinRegistries.createWrapperLookup());
+    //protected static final CommandRegistryAccess REGISTRY_ACCESS = CommandManager.createRegistryAccess(BuiltinRegistries.createWrapperLookup());
     protected static final int SINGLE_SUCCESS = com.mojang.brigadier.Command.SINGLE_SUCCESS;
-    protected static final MinecraftClient mc = MeteorClient.mc;
+    protected static final ClientSingletons client = MeteorClient.client;
 
     private final String name;
     private final String title;
@@ -40,26 +43,26 @@ public abstract class Command {
     }
 
     // Helper methods to painlessly infer the CommandSource generic type argument
-    protected static <T> RequiredArgumentBuilder<CommandSource, T> argument(final String name, final ArgumentType<T> type) {
+    protected static <T> RequiredArgumentBuilder<ClientCommandSource, T> argument(final String name, final ArgumentType<T> type) {
         return RequiredArgumentBuilder.argument(name, type);
     }
 
-    protected static LiteralArgumentBuilder<CommandSource> literal(final String name) {
+    protected static LiteralArgumentBuilder<ClientCommandSource> literal(final String name) {
         return LiteralArgumentBuilder.literal(name);
     }
 
-    public final void registerTo(CommandDispatcher<CommandSource> dispatcher) {
+    public final void registerTo(CommandDispatcher<ClientCommandSource> dispatcher) {
         register(dispatcher, name);
         for (String alias : aliases) register(dispatcher, alias);
     }
 
-    public void register(CommandDispatcher<CommandSource> dispatcher, String name) {
-        LiteralArgumentBuilder<CommandSource> builder = LiteralArgumentBuilder.literal(name);
+    public void register(CommandDispatcher<ClientCommandSource> dispatcher, String name) {
+        LiteralArgumentBuilder<ClientCommandSource> builder = LiteralArgumentBuilder.literal(name);
         build(builder);
         dispatcher.register(builder);
     }
 
-    public abstract void build(LiteralArgumentBuilder<CommandSource> builder);
+    public abstract void build(LiteralArgumentBuilder<ClientCommandSource> builder);
 
     public String getName() {
         return name;
@@ -83,23 +86,18 @@ public abstract class Command {
         return base.toString();
     }
 
-    public void info(Text message) {
+    public void info(String message) {
         ChatUtils.forceNextPrefixClass(getClass());
-        ChatUtils.sendMsg(title, message);
+        ChatUtils.infoPrefix(title, message);
     }
 
-    public void info(String message, Object... args) {
+    public void warning(String message) {
         ChatUtils.forceNextPrefixClass(getClass());
-        ChatUtils.infoPrefix(title, message, args);
+        ChatUtils.warningPrefix(title, message);
     }
 
-    public void warning(String message, Object... args) {
+    public void error(String message) {
         ChatUtils.forceNextPrefixClass(getClass());
-        ChatUtils.warningPrefix(title, message, args);
-    }
-
-    public void error(String message, Object... args) {
-        ChatUtils.forceNextPrefixClass(getClass());
-        ChatUtils.errorPrefix(title, message, args);
+        ChatUtils.errorPrefix(title, message);
     }
 }

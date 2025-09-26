@@ -5,14 +5,18 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.util.Identifier;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.IGetter;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Nullable;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.registry.Registry;
+//import net.minecraft.util.Identifier;
+//import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,22 +116,23 @@ public abstract class Setting<T> implements IGetter<T>, ISerializable<T> {
         return NO_SUGGESTIONS;
     }
 
-    protected abstract NbtCompound save(NbtCompound tag);
+    protected abstract DataTagManifest save(DataTagManifest tag);
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
 
-        tag.putString("name", name);
+        tag.addTag(new DataTag<>("name", new StringDataAttribute(name)));
+
         save(tag);
 
         return tag;
     }
 
-    protected abstract T load(NbtCompound tag);
+    protected abstract T load(DataTagManifest tag);
 
     @Override
-    public T fromTag(NbtCompound tag) {
+    public T fromTag(DataTagManifest tag) {
         T value = load(tag);
         onChanged();
 
@@ -152,17 +157,17 @@ public abstract class Setting<T> implements IGetter<T>, ISerializable<T> {
         return Objects.hash(name);
     }
 
-    @Nullable
-    public static <T> T parseId(Registry<T> registry, String name) {
-        name = name.trim();
-
-        Identifier id;
-        if (name.contains(":")) id = Identifier.of(name);
-        else id = Identifier.of("minecraft", name);
-        if (registry.containsId(id)) return registry.get(id);
-
-        return null;
-    }
+//    @Nullable
+//    public static <T> T parseId(Registry<T> registry, String name) {
+//        name = name.trim();
+//
+//        Identifier id;
+//        if (name.contains(":")) id = Identifier.of(name);
+//        else id = Identifier.of("minecraft", name);
+//        if (registry.containsId(id)) return registry.get(id);
+//
+//        return null;
+//    }
 
     public abstract static class SettingBuilder<B, V, S> {
         protected String name = "undefined", description = "";

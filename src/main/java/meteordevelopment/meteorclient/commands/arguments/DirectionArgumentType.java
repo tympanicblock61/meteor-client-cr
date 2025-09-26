@@ -5,14 +5,18 @@
 
 package meteordevelopment.meteorclient.commands.arguments;
 
-import net.minecraft.command.argument.EnumArgumentType;
-import net.minecraft.util.math.Direction;
+//import net.minecraft.command.argument.EnumArgumentType;
+//import net.minecraft.util.math.Direction;
+
+
+
+import finalforeach.cosmicreach.constants.Direction;
 
 public class DirectionArgumentType extends EnumArgumentType<Direction> {
     private static final DirectionArgumentType INSTANCE = new DirectionArgumentType();
 
     private DirectionArgumentType() {
-        super(Direction.CODEC, Direction::values);
+        super(Direction.class);
     }
 
     public static DirectionArgumentType create() {

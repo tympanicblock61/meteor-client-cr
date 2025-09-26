@@ -5,14 +5,15 @@
 
 package meteordevelopment.meteorclient.events.packets;
 
-import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
+import finalforeach.cosmicreach.networking.packets.items.SlotSyncPacket;
+//import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
 
 public class InventoryEvent {
     private static final InventoryEvent INSTANCE = new InventoryEvent();
 
-    public InventoryS2CPacket packet;
+    public SlotSyncPacket packet;
 
-    public static InventoryEvent get(InventoryS2CPacket packet) {
+    public static InventoryEvent get(SlotSyncPacket packet) {
         INSTANCE.packet = packet;
         return INSTANCE;
     }

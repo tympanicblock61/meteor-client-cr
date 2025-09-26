@@ -5,19 +5,27 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.item.Item;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+//import net.minecraft.item.Item;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtString;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.util.Identifier;
+
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.items.Item;
+import finalforeach.cosmicreach.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ItemListSetting extends Setting<List<Item>> {
     public final Predicate<Item> filter;
@@ -37,7 +45,7 @@ public class ItemListSetting extends Setting<List<Item>> {
 
         try {
             for (String value : values) {
-                Item item = parseId(Registries.ITEM, value);
+                Item item = Item.allItems.get(value);
                 if (item != null && (filter == null || filter.test(item))) items.add(item);
             }
         } catch (Exception ignored) {}
@@ -57,27 +65,28 @@ public class ItemListSetting extends Setting<List<Item>> {
 
     @Override
     public Iterable<Identifier> getIdentifierSuggestions() {
-        return Registries.ITEM.getIds();
+        return Arrays.stream(Item.allItems.keys().toArray().items).map(Identifier::of).collect(Collectors.toList());
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        NbtList valueTag = new NbtList();
+    public DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<StringDataAttribute> valueTag = new ListDataAttribute<>();
+        List<StringDataAttribute> list_ = new ArrayList<>();
         for (Item item : get()) {
-            if (bypassFilterWhenSavingAndLoading || (filter == null || filter.test(item))) valueTag.add(NbtString.of(Registries.ITEM.getId(item).toString()));
+            if (bypassFilterWhenSavingAndLoading || (filter == null || filter.test(item))) list_.add(new StringDataAttribute(item.getID()));
         }
-        tag.put("value", valueTag);
-
+        valueTag.setValue(list_);
+        tag.addTag(new DataTag<>("value", valueTag));
         return tag;
     }
 
     @Override
-    public List<Item> load(NbtCompound tag) {
+    public List<Item> load(DataTagManifest tag) {
         get().clear();
 
-        NbtList valueTag = tag.getList("value", 8);
-        for (NbtElement tagI : valueTag) {
-            Item item = Registries.ITEM.get(Identifier.of(tagI.asString()));
+        List<StringDataAttribute> valueTag = tag.getTag("value").getTagAsType((Class<List<StringDataAttribute>>) (Class<?>) List.class).getValue();
+        for (StringDataAttribute tagI : valueTag) {
+            Item item = Item.allItems.get(tagI.getValue());
 
             if (bypassFilterWhenSavingAndLoading || (filter == null || filter.test(item))) get().add(item);
         }

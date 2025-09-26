@@ -5,8 +5,9 @@
 
 package meteordevelopment.meteorclient.events.render;
 
+import finalforeach.cosmicreach.blockentities.BlockEntity;
 import meteordevelopment.meteorclient.events.Cancellable;
-import net.minecraft.block.entity.BlockEntity;
+//import net.minecraft.block.entity.BlockEntity;
 
 public class RenderBlockEntityEvent extends Cancellable {
     private static final RenderBlockEntityEvent INSTANCE = new RenderBlockEntityEvent();

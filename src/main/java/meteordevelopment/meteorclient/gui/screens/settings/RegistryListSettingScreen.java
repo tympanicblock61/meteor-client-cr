@@ -5,6 +5,8 @@
 
 package meteordevelopment.meteorclient.gui.screens.settings;
 
+import com.github.puzzle.core.registries.IRegistry;
+import com.github.puzzle.util.MutablePair;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.utils.Cell;
@@ -14,8 +16,8 @@ import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.utils.Utils;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Pair;
+//import net.minecraft.registry.Registry;
+//import net.minecraft.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,14 +28,14 @@ import java.util.function.Consumer;
 public abstract class RegistryListSettingScreen<T> extends WindowScreen {
     protected final Setting<?> setting;
     protected final Collection<T> collection;
-    private final Registry<T> registry;
+    private final IRegistry<T> registry;
 
     private WTextBox filter;
     private String filterText = "";
 
     private WTable table;
 
-    public RegistryListSettingScreen(GuiTheme theme, String title, Setting<?> setting, Collection<T> collection, Registry<T> registry) {
+    public RegistryListSettingScreen(GuiTheme theme, String title, Setting<?> setting, Collection<T> collection, IRegistry<T> registry) {
         super(theme, title);
 
         this.registry = registry;
@@ -58,14 +60,14 @@ public abstract class RegistryListSettingScreen<T> extends WindowScreen {
         initWidgets(registry);
     }
 
-    private void initWidgets(Registry<T> registry) {
+    private void initWidgets(IRegistry<T> registry) {
         // Left (all)
         WTable left = abc(pairs -> registry.forEach(t -> {
             if (skipValue(t) || collection.contains(t)) return;
 
             int words = Utils.searchInWords(getValueName(t), filterText);
             int diff = Utils.searchLevenshteinDefault(getValueName(t), filterText, false);
-            if (words > 0 || diff <= getValueName(t).length() / 2) pairs.add(new Pair<>(t, -diff));
+            if (words > 0 || diff <= getValueName(t).length() / 2) pairs.add(new MutablePair<>(t, -diff));
         }), true, t -> {
             addValue(registry, t);
 
@@ -82,7 +84,7 @@ public abstract class RegistryListSettingScreen<T> extends WindowScreen {
 
                 int words = Utils.searchInWords(getValueName(value), filterText);
                 int diff = Utils.searchLevenshteinDefault(getValueName(value), filterText, false);
-                if (words > 0 || diff <= getValueName(value).length() / 2) pairs.add(new Pair<>(value, -diff));
+                if (words > 0 || diff <= getValueName(value).length() / 2) pairs.add(new MutablePair<>(value, -diff));
             }
         }, false, t -> {
             removeValue(registry, t);
@@ -92,7 +94,7 @@ public abstract class RegistryListSettingScreen<T> extends WindowScreen {
         });
     }
 
-    private void addValue(Registry<T> registry, T value) {
+    private void addValue(IRegistry<T> registry, T value) {
         if (!collection.contains(value)) {
             collection.add(value);
 
@@ -102,7 +104,7 @@ public abstract class RegistryListSettingScreen<T> extends WindowScreen {
         }
     }
 
-    private void removeValue(Registry<T> registry, T value) {
+    private void removeValue(IRegistry<T> registry, T value) {
         if (collection.remove(value)) {
             setting.onChanged();
             table.clear();
@@ -110,7 +112,7 @@ public abstract class RegistryListSettingScreen<T> extends WindowScreen {
         }
     }
 
-    private WTable abc(Consumer<List<Pair<T, Integer>>> addValues, boolean isLeft, Consumer<T> buttonAction) {
+    private WTable abc(Consumer<List<MutablePair<T, Integer>>> addValues, boolean isLeft, Consumer<T> buttonAction) {
         // Create
         Cell<WTable> cell = this.table.add(theme.table()).top();
         WTable table = cell.widget();
@@ -127,10 +129,10 @@ public abstract class RegistryListSettingScreen<T> extends WindowScreen {
         };
 
         // Sort
-        List<Pair<T, Integer>> values = new ArrayList<>();
+        List<MutablePair<T, Integer>> values = new ArrayList<>();
         addValues.accept(values);
         if (!filterText.isEmpty()) values.sort(Comparator.comparingInt(value -> -value.getRight()));
-        for (Pair<T, Integer> pair : values) forEach.accept(pair.getLeft());
+        for (MutablePair<T, Integer> pair : values) forEach.accept(pair.getLeft());
 
         if (!table.cells.isEmpty()) cell.expandX();
 

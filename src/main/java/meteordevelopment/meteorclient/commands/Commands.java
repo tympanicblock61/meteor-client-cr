@@ -5,64 +5,72 @@
 
 package meteordevelopment.meteorclient.commands;
 
+import com.github.puzzle.game.commands.ClientCommandManager;
+import com.github.puzzle.game.common.Puzzle;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import meteordevelopment.meteorclient.commands.commands.*;
+import finalforeach.cosmicreach.ClientSingletons;
+import finalforeach.cosmicreach.GameSingletons;
+import finalforeach.cosmicreach.chat.Chat;
+//import meteordevelopment.meteorclient.commands.commands.*;
 import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.utils.PostInit;
-import net.minecraft.command.CommandSource;
+import meteordevelopment.stolen.ClientCommandSource;
+import meteordevelopment.stolen.CommandSource;
+//import net.minecraft.command.CommandSource;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static meteordevelopment.meteorclient.MeteorClient.client;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Commands {
-    public static final CommandDispatcher<CommandSource> DISPATCHER = new CommandDispatcher<>();
+    public static final CommandDispatcher<ClientCommandSource> DISPATCHER = new CommandDispatcher<>();
     public static final List<Command> COMMANDS = new ArrayList<>();
 
     @PostInit(dependencies = PathManagers.class)
     public static void init() {
-        add(new VClipCommand());
-        add(new HClipCommand());
-        add(new DismountCommand());
-        add(new DisconnectCommand());
-        add(new DamageCommand());
-        add(new DropCommand());
-        add(new EnchantCommand());
-        add(new FakePlayerCommand());
-        add(new FriendsCommand());
-        add(new CommandsCommand());
-        add(new InventoryCommand());
-        add(new NbtCommand());
-        add(new NotebotCommand());
-        add(new PeekCommand());
-        add(new EnderChestCommand());
-        add(new ProfilesCommand());
-        add(new ReloadCommand());
-        add(new ResetCommand());
-        add(new SayCommand());
-        add(new ServerCommand());
-        add(new SwarmCommand());
-        add(new ToggleCommand());
-        add(new SettingCommand());
-        add(new SpectateCommand());
-        add(new GamemodeCommand());
-        add(new SaveMapCommand());
-        add(new MacroCommand());
-        add(new ModulesCommand());
-        add(new BindsCommand());
-        add(new GiveCommand());
-        add(new NameHistoryCommand());
-        add(new BindCommand());
-        add(new FovCommand());
-        add(new RotationCommand());
-        add(new WaypointCommand());
-        add(new InputCommand());
-        add(new WaspCommand());
-        add(new LocateCommand());
-
+        //ClientCommandManager.DISPATCHER = DISPATCHER;
+//        add(new VClipCommand());
+//        add(new HClipCommand());
+//        add(new DismountCommand());
+//        add(new DisconnectCommand());
+//        add(new DamageCommand());
+//        add(new DropCommand());
+//        add(new EnchantCommand());
+//        add(new FakePlayerCommand());
+//        add(new FriendsCommand());
+//        add(new CommandsCommand());
+//        add(new InventoryCommand());
+//        add(new NbtCommand());
+//        add(new NotebotCommand());
+//        add(new PeekCommand());
+//        add(new EnderChestCommand());
+//        add(new ProfilesCommand());
+//        add(new ReloadCommand());
+//        add(new ResetCommand());
+//        add(new SayCommand());
+//        add(new ServerCommand());
+//        add(new SwarmCommand());
+//        add(new ToggleCommand());
+//        add(new SettingCommand());
+//        add(new SpectateCommand());
+//        add(new GamemodeCommand());
+//        add(new SaveMapCommand());
+//        add(new MacroCommand());
+//        add(new ModulesCommand());
+//        add(new BindsCommand());
+//        add(new GiveCommand());
+//        add(new NameHistoryCommand());
+//        add(new BindCommand());
+//        add(new FovCommand());
+//        add(new RotationCommand());
+//        add(new WaypointCommand());
+//        add(new InputCommand());
+//        add(new WaspCommand());
+//        add(new LocateCommand());
         COMMANDS.sort(Comparator.comparing(Command::getName));
     }
 
@@ -73,7 +81,7 @@ public class Commands {
     }
 
     public static void dispatch(String message) throws CommandSyntaxException {
-        DISPATCHER.execute(message, mc.getNetworkHandler().getCommandSource());
+        DISPATCHER.execute(message, new ClientCommandSource(client.getLocalPlayer(), GameSingletons.world, Chat.MAIN_CLIENT_CHAT));
     }
 
     public static Command get(String name) {

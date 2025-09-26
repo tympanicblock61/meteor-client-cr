@@ -5,11 +5,13 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
 import meteordevelopment.meteorclient.renderer.Fonts;
 import meteordevelopment.meteorclient.renderer.text.FontFace;
 import meteordevelopment.meteorclient.renderer.text.FontFamily;
 import meteordevelopment.meteorclient.renderer.text.FontInfo;
-import net.minecraft.nbt.NbtCompound;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -56,19 +58,19 @@ public class FontFaceSetting extends Setting<FontFace> {
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        tag.putString("family", get().info.family());
-        tag.putString("type", get().info.type().toString());
+    protected DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("family", new StringDataAttribute(get().info.family())));
+        tag.addTag(new DataTag<>("type", new StringDataAttribute(get().info.type().toString())));
         return tag;
     }
 
     @Override
-    protected FontFace load(NbtCompound tag) {
-        String family = tag.getString("family");
+    protected FontFace load(DataTagManifest tag) {
+        String family = tag.getTag("family").getTagAsType(String.class).getValue();
         FontInfo.Type type;
 
         try {
-            type = FontInfo.Type.valueOf(tag.getString("type"));
+            type = FontInfo.Type.valueOf(tag.getTag("type").getTagAsType(String.class).getValue());
         }
         catch (IllegalArgumentException ignored) {
             set(Fonts.DEFAULT_FONT);

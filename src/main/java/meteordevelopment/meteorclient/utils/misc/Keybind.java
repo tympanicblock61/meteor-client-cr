@@ -5,9 +5,13 @@
 
 package meteordevelopment.meteorclient.utils.misc;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.BooleanDataAttribute;
+import com.github.puzzle.game.items.data.attributes.IntDataAttribute;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
 
 import java.util.Objects;
 
@@ -155,22 +159,19 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
     // Serialization
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-
-        tag.putBoolean("isKey", isKey);
-        tag.putInt("value", value);
-        tag.putInt("modifiers", modifiers);
-
+    public DataTagManifest toTag() {
+        DataTagManifest tag = new DataTagManifest();
+        tag.addTag(new DataTag<>("isKey", new BooleanDataAttribute(isKey)));
+        tag.addTag(new DataTag<>("value", new IntDataAttribute(value)));
+        tag.addTag(new DataTag<>("modifiers", new IntDataAttribute(modifiers)));
         return tag;
     }
 
     @Override
-    public Keybind fromTag(NbtCompound tag) {
-        isKey = tag.getBoolean("isKey");
-        value = tag.getInt("value");
-        modifiers = tag.getInt("modifiers");
-
+    public Keybind fromTag(DataTagManifest tag) {
+        isKey = tag.getTag("isKey").getTagAsType(Boolean.TYPE).getValue();
+        value = tag.getTag("value").getTagAsType(Integer.TYPE).getValue();
+        modifiers = tag.getTag("modifiers").getTagAsType(Integer.TYPE).getValue();
         return this;
     }
 }

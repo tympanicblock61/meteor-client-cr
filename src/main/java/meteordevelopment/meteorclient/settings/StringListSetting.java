@@ -5,6 +5,11 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.utils.CharFilter;
@@ -12,10 +17,10 @@ import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WMinus;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,25 +49,24 @@ public class StringListSetting extends Setting<List<String>>{
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        NbtList valueTag = new NbtList();
+    public DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<StringDataAttribute> valueTag = new ListDataAttribute<>();
+        List<StringDataAttribute> list_ = new ArrayList<>();
         for (int i = 0; i < this.value.size(); i++) {
-            valueTag.add(i, NbtString.of(get().get(i)));
+            list_.add(new StringDataAttribute(get().get(i)));
         }
-        tag.put("value", valueTag);
-
+        valueTag.setValue(list_);
+        tag.addTag(new DataTag<>("value", valueTag));
         return tag;
     }
 
     @Override
-    public List<String> load(NbtCompound tag) {
+    public List<String> load(DataTagManifest tag) {
         get().clear();
-
-        NbtList valueTag = tag.getList("value", 8);
-        for (NbtElement tagI : valueTag) {
-            get().add(tagI.asString());
+        List<StringDataAttribute> valueTag = tag.getTag("value").getTagAsType((Class<List<StringDataAttribute>>) (Class<?>) List.class).getValue();
+        for (StringDataAttribute tagI : valueTag) {
+            get().add(tagI.getValue());
         }
-
         return get();
     }
 

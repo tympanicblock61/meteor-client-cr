@@ -5,10 +5,12 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import meteordevelopment.meteorclient.utils.misc.NbtUtils;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import meteordevelopment.meteorclient.utils.misc.DataTagUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,18 +50,18 @@ public class ColorListSetting extends Setting<List<SettingColor>> {
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        tag.put("value", NbtUtils.listToTag(get()));
+    protected DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", DataTagUtils.listToTag(get())));
 
         return tag;
     }
 
     @Override
-    protected List<SettingColor> load(NbtCompound tag) {
+    protected List<SettingColor> load(DataTagManifest tag) {
         get().clear();
 
-        for (NbtElement e : tag.getList("value", NbtElement.COMPOUND_TYPE)) {
-            get().add(new SettingColor().fromTag((NbtCompound) e));
+        for (DataTagManifestAttribute e : tag.getTag("value").getTagAsType((Class<List<DataTagManifestAttribute>>) (Class<?>) List.class).getValue()) {
+            get().add(new SettingColor().fromTag(e.getValue()));
         }
 
         return get();

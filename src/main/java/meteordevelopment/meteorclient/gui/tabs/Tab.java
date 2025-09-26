@@ -5,10 +5,11 @@
 
 package meteordevelopment.meteorclient.gui.tabs;
 
+import finalforeach.cosmicreach.gamestates.GameState;
 import meteordevelopment.meteorclient.gui.GuiTheme;
-import net.minecraft.client.gui.screen.Screen;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import net.minecraft.client.gui.screen.Screen;
+//
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public abstract class Tab {
     public final String name;
@@ -25,5 +26,5 @@ public abstract class Tab {
 
     public abstract TabScreen createScreen(GuiTheme theme);
 
-    public abstract boolean isScreen(Screen screen);
+    public abstract boolean isScreen(GameState screen);
 }

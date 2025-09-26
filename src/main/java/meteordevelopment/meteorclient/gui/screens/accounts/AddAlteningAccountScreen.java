@@ -5,13 +5,13 @@
 
 package meteordevelopment.meteorclient.gui.screens.accounts;
 
-import meteordevelopment.meteorclient.gui.GuiTheme;
-import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
-import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
-import meteordevelopment.meteorclient.systems.accounts.types.TheAlteningAccount;
+//import meteordevelopment.meteorclient.gui.GuiTheme;
+//import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
+//import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
+//import meteordevelopment.meteorclient.systems.accounts.types.TheAlteningAccount;
 
-public class AddAlteningAccountScreen extends AddAccountScreen {
-    public AddAlteningAccountScreen(GuiTheme theme, AccountsScreen parent) {
+public class AddAlteningAccountScreen /*extends AddAccountScreen*/ {
+    /*public AddAlteningAccountScreen(GuiTheme theme, AccountsScreen parent) {
         super(theme, "Add The Altening Account", parent);
     }
 
@@ -34,5 +34,5 @@ public class AddAlteningAccountScreen extends AddAccountScreen {
         };
 
         enterAction = add.action;
-    }
+    }*/
 }

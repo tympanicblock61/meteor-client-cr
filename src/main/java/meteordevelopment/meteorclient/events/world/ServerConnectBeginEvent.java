@@ -5,15 +5,17 @@
 
 package meteordevelopment.meteorclient.events.world;
 
-import net.minecraft.client.network.ServerAddress;
-import net.minecraft.client.network.ServerInfo;
+//import net.minecraft.client.network.ServerAddress;
+//import net.minecraft.client.network.ServerInfo;
+
+import finalforeach.cosmicreach.settings.ServerSettings;
 
 public class ServerConnectBeginEvent {
     private static final ServerConnectBeginEvent INSTANCE = new ServerConnectBeginEvent();
-    public ServerAddress address;
-    public ServerInfo info;
+    public String address;
+    public ServerSettings info;
 
-    public static ServerConnectBeginEvent get(ServerAddress address, ServerInfo info) {
+    public static ServerConnectBeginEvent get(String address, ServerSettings info) {
         INSTANCE.address = address;
         INSTANCE.info = info;
         return INSTANCE;

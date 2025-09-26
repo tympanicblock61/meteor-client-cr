@@ -5,14 +5,14 @@
 
 package meteordevelopment.meteorclient.gui.screens.accounts;
 
-import meteordevelopment.meteorclient.gui.GuiTheme;
-import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
-import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
-import meteordevelopment.meteorclient.systems.accounts.Accounts;
-import meteordevelopment.meteorclient.systems.accounts.types.CrackedAccount;
+//import meteordevelopment.meteorclient.gui.GuiTheme;
+//import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
+//import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
+//import meteordevelopment.meteorclient.systems.accounts.Accounts;
+//import meteordevelopment.meteorclient.systems.accounts.types.CrackedAccount;
 
-public class AddCrackedAccountScreen extends AddAccountScreen {
-    public AddCrackedAccountScreen(GuiTheme theme, AccountsScreen parent) {
+public class AddCrackedAccountScreen /*extends AddAccountScreen*/ {
+   /* public AddCrackedAccountScreen(GuiTheme theme, AccountsScreen parent) {
         super(theme, "Add Cracked Account", parent);
     }
 
@@ -41,5 +41,5 @@ public class AddCrackedAccountScreen extends AddAccountScreen {
         };
 
         enterAction = add.action;
-    }
+    }*/
 }

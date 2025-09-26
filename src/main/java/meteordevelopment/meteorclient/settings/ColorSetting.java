@@ -5,9 +5,12 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -48,16 +51,14 @@ public class ColorSetting extends Setting<SettingColor> {
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        tag.put("value", get().toTag());
-
+    protected DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new DataTagManifestAttribute(get().toTag())));
         return tag;
     }
 
     @Override
-    public SettingColor load(NbtCompound tag) {
-        get().fromTag(tag.getCompound("value"));
-
+    public SettingColor load(DataTagManifest tag) {
+        get().fromTag(tag.getTag("value").getTagAsType(DataTagManifest.class).getValue());
         return get();
     }
 

@@ -5,12 +5,16 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,21 +63,22 @@ public class ModuleListSetting extends Setting<List<Module>> {
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        NbtList modulesTag = new NbtList();
-        for (Module module : get()) modulesTag.add(NbtString.of(module.name));
-        tag.put("modules", modulesTag);
-
+    public DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<StringDataAttribute> modulesTag = new ListDataAttribute<>();
+        List<StringDataAttribute> list_ = new ArrayList<>();
+        for (Module module : get()) list_.add(new StringDataAttribute(module.name));
+        modulesTag.setValue(list_);
+        tag.addTag(new DataTag<>("modules", modulesTag));
         return tag;
     }
 
     @Override
-    public List<Module> load(NbtCompound tag) {
+    public List<Module> load(DataTagManifest tag) {
         get().clear();
 
-        NbtList valueTag = tag.getList("modules", 8);
-        for (NbtElement tagI : valueTag) {
-            Module module = Modules.get().get(tagI.asString());
+        List<StringDataAttribute> valueTag = tag.getTag("modules").getTagAsType((Class<List<StringDataAttribute>>) (Class<?>) List.class).getValue();
+        for (StringDataAttribute tagI : valueTag) {
+            Module module = Modules.get().get(tagI.getValue());
             if (module != null) get().add(module);
         }
 

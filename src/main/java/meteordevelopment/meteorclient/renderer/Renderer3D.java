@@ -5,11 +5,15 @@
 
 package meteordevelopment.meteorclient.renderer;
 
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.collision.BoundingBox;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+import meteordevelopment.meteorclient.utils.render.Box;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.world.Dir;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
+//import net.minecraft.client.util.math.MatrixStack;
+//import net.minecraft.util.math.BlockPos;
+//import net.minecraft.util.math.Box;
 
 public class Renderer3D {
     public final Mesh lines = new ShaderMesh(Shaders.POS_COLOR, DrawMode.Lines, Mesh.Attrib.Vec3, Mesh.Attrib.Color);
@@ -25,7 +29,7 @@ public class Renderer3D {
         triangles.end();
     }
 
-    public void render(MatrixStack matrices) {
+    public void render(Matrix4 matrices) {
         lines.render(matrices);
         triangles.render(matrices);
     }
@@ -208,13 +212,13 @@ public class Renderer3D {
         if (mode.sides()) boxSides(x1, y1, z1, x2, y2, z2, sideColor, excludeDir);
     }
 
-    public void box(BlockPos pos, Color sideColor, Color lineColor, ShapeMode mode, int excludeDir) {
-        if (mode.lines()) boxLines(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1, lineColor, excludeDir);
-        if (mode.sides()) boxSides(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1, sideColor, excludeDir);
+    public void box(BlockPosition pos, Color sideColor, Color lineColor, ShapeMode mode, int excludeDir) {
+        if (mode.lines()) boxLines(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ(), pos.getGlobalX() + 1, pos.getGlobalY() + 1, pos.getGlobalZ() + 1, lineColor, excludeDir);
+        if (mode.sides()) boxSides(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ(), pos.getGlobalX() + 1, pos.getGlobalY() + 1, pos.getGlobalZ() + 1, sideColor, excludeDir);
     }
 
-    public void box(Box box, Color sideColor, Color lineColor, ShapeMode mode, int excludeDir) {
-        if (mode.lines()) boxLines(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, lineColor, excludeDir);
-        if (mode.sides()) boxSides(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, sideColor, excludeDir);
+    public void box(BoundingBox box, Color sideColor, Color lineColor, ShapeMode mode, int excludeDir) {
+        if (mode.lines()) boxLines(box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z, lineColor, excludeDir);
+        if (mode.sides()) boxSides(box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z, sideColor, excludeDir);
     }
 }

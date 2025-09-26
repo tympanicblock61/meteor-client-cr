@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.commands.arguments;
 
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -12,19 +13,24 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
+import finalforeach.cosmicreach.GameSingletons;
+import finalforeach.cosmicreach.entities.player.Player;
+import finalforeach.cosmicreach.entities.player.PlayerEntity;
+import meteordevelopment.stolen.CommandSource;
+//import net.minecraft.command.CommandSource;
+//import net.minecraft.entity.player.PlayerEntity;
+//import net.minecraft.text.Text;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class PlayerArgumentType implements ArgumentType<PlayerEntity> {
     private static final PlayerArgumentType INSTANCE = new PlayerArgumentType();
-    private static final DynamicCommandExceptionType NO_SUCH_PLAYER = new DynamicCommandExceptionType(name -> Text.literal("Player with name " + name + " doesn't exist."));
+    private static final DynamicCommandExceptionType NO_SUCH_PLAYER = new DynamicCommandExceptionType(name -> new LiteralMessage("Player with name " + name + " doesn't exist."));
 
     private static final Collection<String> EXAMPLES = List.of("seasnail8169", "MineGame159");
 
@@ -43,9 +49,9 @@ public class PlayerArgumentType implements ArgumentType<PlayerEntity> {
         String argument = reader.readString();
         PlayerEntity playerEntity = null;
 
-        for (PlayerEntity p : mc.world.getPlayers()) {
-            if (p.getName().getString().equalsIgnoreCase(argument)) {
-                playerEntity = p;
+        for (Player p : GameSingletons.world.players.items) {
+            if (p.getAccount().getDisplayName().equalsIgnoreCase(argument)) {
+                playerEntity = (PlayerEntity) p.getEntity();
                 break;
             }
         }
@@ -56,7 +62,7 @@ public class PlayerArgumentType implements ArgumentType<PlayerEntity> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestMatching(mc.world.getPlayers().stream().map(abstractClientPlayerEntity -> abstractClientPlayerEntity.getName().getString()), builder);
+        return CommandSource.suggestMatching(Arrays.stream(GameSingletons.world.players.items).map(player -> player.getAccount().getDisplayName()), builder);
     }
 
     @Override

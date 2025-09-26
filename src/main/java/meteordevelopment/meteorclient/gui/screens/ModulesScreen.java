@@ -18,8 +18,7 @@ import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.misc.NbtUtils;
-import net.minecraft.item.Items;
+import meteordevelopment.meteorclient.utils.misc.DataTagUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +45,8 @@ public class ModulesScreen extends TabScreen {
     }
 
     @Override
-    protected void init() {
-        super.init();
+    public void create() {
+        super.create();
         controller.refresh();
     }
 
@@ -183,16 +182,26 @@ public class ModulesScreen extends TabScreen {
 
     @Override
     public boolean toClipboard() {
-        return NbtUtils.toClipboard(Modules.get());
+        return DataTagUtils.toClipboard(Modules.get());
     }
 
     @Override
     public boolean fromClipboard() {
-        return NbtUtils.fromClipboard(Modules.get());
+        return DataTagUtils.fromClipboard(Modules.get());
     }
 
     @Override
     public void reload() {}
+
+    @Override
+    public boolean touchCancelled(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
+        return false;
+    }
 
     // Stuff
 

@@ -5,13 +5,19 @@
 
 package meteordevelopment.meteorclient.utils.world;
 
-import meteordevelopment.meteorclient.mixin.ChunkAccessor;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.Chunk;
+import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.utils.LongMap;
+import finalforeach.cosmicreach.blockentities.BlockEntity;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+import finalforeach.cosmicreach.util.IPoint3DMap;
+import finalforeach.cosmicreach.util.Point3DMap;
+import finalforeach.cosmicreach.world.Chunk;
+import meteordevelopment.meteorclient.mixins.AccessorChunk;
+import meteordevelopment.meteorclient.mixins.AccessorPoint3DMap;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class BlockEntityIterator implements Iterator<BlockEntity> {
     private final Iterator<Chunk> chunks;
@@ -19,7 +25,6 @@ public class BlockEntityIterator implements Iterator<BlockEntity> {
 
     public BlockEntityIterator() {
         chunks = new ChunkIterator(false);
-
         nextChunk();
     }
 
@@ -27,12 +32,13 @@ public class BlockEntityIterator implements Iterator<BlockEntity> {
         while (true) {
             if (!chunks.hasNext()) break;
 
-            Map<BlockPos, BlockEntity> blockEntityMap = ((ChunkAccessor) chunks.next()).getBlockEntities();
-
-            if (!blockEntityMap.isEmpty()) {
-                blockEntities = blockEntityMap.values().iterator();
-                break;
-            }
+            try {
+                Point3DMap<BlockEntity> blockEntityMap = (Point3DMap<BlockEntity>) ((AccessorChunk)chunks.next()).getBlockEntities();
+                if (!blockEntityMap.isEmpty()) {
+                    blockEntities = iterator(blockEntityMap);
+                    break;
+                }
+            } catch (Exception ignored) {}
         }
     }
 
@@ -49,5 +55,28 @@ public class BlockEntityIterator implements Iterator<BlockEntity> {
     @Override
     public BlockEntity next() {
         return blockEntities.next();
+    }
+
+    public static <T> Iterator<T> iterator(Point3DMap<T> point3DMap) throws IllegalAccessException {
+        return new Iterator<>() {
+            private final Iterator<LongMap.Entry<IntMap<T>>> outerIterator = ((AccessorPoint3DMap)point3DMap).getMap().iterator();
+            private Iterator<IntMap.Entry<T>> innerIterator = null;
+
+            @Override
+            public boolean hasNext() {
+                while ((innerIterator == null || !innerIterator.hasNext()) && outerIterator.hasNext()) {
+                    innerIterator = outerIterator.next().value.iterator();
+                }
+                return innerIterator != null && innerIterator.hasNext();
+            }
+
+            @Override
+            public T next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                return innerIterator.next().value;
+            }
+        };
     }
 }

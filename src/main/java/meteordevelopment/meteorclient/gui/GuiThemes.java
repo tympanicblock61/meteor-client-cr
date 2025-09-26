@@ -5,15 +5,23 @@
 
 package meteordevelopment.meteorclient.gui;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.savelib.crbin.CRBinDeserializer;
+import finalforeach.cosmicreach.savelib.crbin.CRBinSerializer;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.gui.themes.meteor.MeteorGuiTheme;
 import meteordevelopment.meteorclient.utils.PostInit;
 import meteordevelopment.meteorclient.utils.PreInit;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtIo;
+import meteordevelopment.meteorclient.utils.files.StreamUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,9 +46,17 @@ public class GuiThemes {
     public static void postInit() {
         if (FILE.exists()) {
             try {
-                NbtCompound tag = NbtIo.read(FILE.toPath());
-
-                if (tag != null) select(tag.getString("currentTheme"));
+                CRBinDeserializer cr = CRBinDeserializer.getNew();
+                FileInputStream fis = new FileInputStream(FILE);
+                FileChannel fileChannel = fis.getChannel();
+                long fileSize = fileChannel.size();
+                ByteBuffer buffer = ByteBuffer.allocate((int) fileSize);
+                fileChannel.read(buffer);
+                buffer.flip();
+                cr.prepareForRead(buffer);
+                DataTagManifest tag = new DataTagManifest();
+                tag.read(cr);
+                select(tag.getTag("currentTheme").getTagAsType(String.class).getValue());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -85,8 +101,17 @@ public class GuiThemes {
                 File file = new File(THEMES_FOLDER, get().name + ".nbt");
 
                 if (file.exists()) {
-                    NbtCompound tag = NbtIo.read(file.toPath());
-                    if (tag != null) get().fromTag(tag);
+                    CRBinDeserializer cr = CRBinDeserializer.getNew();
+                    FileInputStream fis = new FileInputStream(file);
+                    FileChannel fileChannel = fis.getChannel();
+                    long fileSize = fileChannel.size();
+                    ByteBuffer buffer = ByteBuffer.allocate((int) fileSize);
+                    fileChannel.read(buffer);
+                    buffer.flip();
+                    cr.prepareForRead(buffer);
+                    DataTagManifest tag = new DataTagManifest();
+                    tag.read(cr);
+                    get().fromTag(tag);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -116,10 +141,13 @@ public class GuiThemes {
     private static void saveTheme() {
         if (get() != null) {
             try {
-                NbtCompound tag = get().toTag();
-
+                DataTagManifest tag = get().toTag();
                 THEMES_FOLDER.mkdirs();
-                NbtIo.write(tag, new File(THEMES_FOLDER, get().name + ".nbt").toPath());
+                File file = new File(THEMES_FOLDER, get().name + ".nbt");
+                CRBinSerializer cr = CRBinSerializer.getNew();
+                tag.write(cr);
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(cr.toBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -128,11 +156,14 @@ public class GuiThemes {
 
     private static void saveGlobal() {
         try {
-            NbtCompound tag = new NbtCompound();
-            tag.putString("currentTheme", get().name);
+            DataTagManifest tag = new DataTagManifest();
+            tag.addTag(new DataTag<>("currentTheme", new StringDataAttribute(get().name)));
 
             FOLDER.mkdirs();
-            NbtIo.write(tag, FILE.toPath());
+            CRBinSerializer cr = CRBinSerializer.getNew();
+            tag.write(cr);
+            FileOutputStream fos = new FileOutputStream(FILE);
+            fos.write(cr.toBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }

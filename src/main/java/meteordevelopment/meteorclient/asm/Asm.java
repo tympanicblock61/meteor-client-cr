@@ -5,9 +5,11 @@
 
 package meteordevelopment.meteorclient.asm;
 
+import com.badlogic.gdx.Gdx;
+import finalforeach.cosmicreach.io.SaveLocation;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.asm.transformers.PacketInflaterTransformer;
-import net.fabricmc.loader.api.FabricLoader;
+//import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
@@ -71,7 +73,8 @@ public class Asm {
     private void export(String name, byte[] bytes) {
         if (export) {
             try {
-                Path path = Path.of(FabricLoader.getInstance().getGameDir().toString(), ".meteor.asm.out", name.replace('.', '/') + ".class");
+                //Path path = Path.of(FabricLoader.getInstance().getGameDir().toString(), ".meteor.asm.out", name.replace('.', '/') + ".class");
+                Path path = Gdx.files.absolute(SaveLocation.getSaveFolderLocation() + "/.meteor.asm.out/"+name.replace('.', '/')+".class").file().toPath();
                 new File(path.toUri()).getParentFile().mkdirs();
                 Files.write(path, bytes);
             } catch (IOException e) {

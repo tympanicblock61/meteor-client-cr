@@ -5,7 +5,11 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
+
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.IntDataAttribute;
 
 import java.util.function.Consumer;
 
@@ -39,16 +43,14 @@ public class IntSetting extends Setting<Integer> {
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        tag.putInt("value", get());
-
+    public DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new IntDataAttribute(get())));
         return tag;
     }
 
     @Override
-    public Integer load(NbtCompound tag) {
-        set(tag.getInt("value"));
-
+    public Integer load(DataTagManifest tag) {
+        set(tag.getTag("value").getTagAsType(Integer.TYPE).getValue());
         return get();
     }
 

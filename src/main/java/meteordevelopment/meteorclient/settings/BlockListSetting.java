@@ -5,13 +5,21 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+//import net.minecraft.block.Block;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtString;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.util.Identifier;
+
+import com.github.puzzle.game.PuzzleRegistries;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.blocks.Block;
+import finalforeach.cosmicreach.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +48,7 @@ public class BlockListSetting extends Setting<List<Block>> {
 
         try {
             for (String value : values) {
-                Block block = parseId(Registries.BLOCK, value);
+                Block block = (Block) PuzzleRegistries.BLOCKS.get(Identifier.of(value));
                 if (block != null && (filter == null || filter.test(block))) blocks.add(block);
             }
         } catch (Exception ignored) {}
@@ -55,27 +63,28 @@ public class BlockListSetting extends Setting<List<Block>> {
 
     @Override
     public Iterable<Identifier> getIdentifierSuggestions() {
-        return Registries.BLOCK.getIds();
+        return PuzzleRegistries.BLOCKS.names();
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        NbtList valueTag = new NbtList();
+    protected DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<StringDataAttribute> valueTag = new ListDataAttribute<>();
+        List<StringDataAttribute> list_ = new ArrayList<>();
         for (Block block : get()) {
-            valueTag.add(NbtString.of(Registries.BLOCK.getId(block).toString()));
+            list_.add(new StringDataAttribute(block.getStringId()));
         }
-        tag.put("value", valueTag);
-
+        valueTag.setValue(list_);
+        tag.addTag(new DataTag<>("value", valueTag));
         return tag;
     }
 
     @Override
-    protected List<Block> load(NbtCompound tag) {
+    protected List<Block> load(DataTagManifest tag) {
         get().clear();
 
-        NbtList valueTag = tag.getList("value", 8);
-        for (NbtElement tagI : valueTag) {
-            Block block = Registries.BLOCK.get(Identifier.of(tagI.asString()));
+        List<StringDataAttribute> valueTag = tag.getTag("value").getTagAsType((Class<List<StringDataAttribute>>) (Class<?>) List.class).getValue();
+        for (StringDataAttribute tagI : valueTag) {
+            Block block = (Block) PuzzleRegistries.BLOCKS.get(Identifier.of(tagI.getValue()));
 
             if (filter == null || filter.test(block)) get().add(block);
         }

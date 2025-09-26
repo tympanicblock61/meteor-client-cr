@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.gui.screens;
 
+import com.badlogic.gdx.Gdx;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.gui.GuiTheme;
@@ -13,7 +14,7 @@ import meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList;
 import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
 import meteordevelopment.meteorclient.utils.network.Http;
 import meteordevelopment.meteorclient.utils.network.MeteorExecutor;
-import net.minecraft.util.Util;
+//import net.minecraft.util.Util;
 
 import java.net.http.HttpResponse;
 import java.time.format.DateTimeFormatter;
@@ -59,11 +60,11 @@ public class CommitsScreen extends WindowScreen {
         l.add(theme.label(headerMessage)).expandX();
 
         String website = addon.getWebsite();
-        if (website != null) l.add(theme.button("Website")).widget().action = () -> Util.getOperatingSystem().open(website);
+        if (website != null) l.add(theme.button("Website")).widget().action = () -> Gdx.net.openURI(website);
 
         l.add(theme.button("GitHub")).widget().action = () -> {
             GithubRepo repo = addon.getRepo();
-            Util.getOperatingSystem().open(String.format("https://github.com/%s/tree/%s", repo.getOwnerName(), repo.branch()));
+            Gdx.net.openURI(String.format("https://github.com/%s/tree/%s", repo.getOwnerName(), repo.branch()));
         };
     }
 
@@ -84,7 +85,7 @@ public class CommitsScreen extends WindowScreen {
 
             l.add(theme.label("Consider using an authentication token: ")).expandX();
             l.add(theme.button("Authorization Guide")).widget().action = () -> {
-                Util.getOperatingSystem().open("https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens");
+                Gdx.net.openURI("https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens");
             };
         }
 
@@ -108,7 +109,7 @@ public class CommitsScreen extends WindowScreen {
                 String date = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(commit.commit.committer.date));
                 t.add(theme.label(date)).top().right().widget().color = theme.textSecondaryColor();
 
-                t.add(theme.label(getMessage(commit))).widget().action = () -> Util.getOperatingSystem().open(String.format("https://github.com/%s/commit/%s", addon.getRepo().getOwnerName(), commit.sha));
+                t.add(theme.label(getMessage(commit))).widget().action = () -> Gdx.net.openURI(String.format("https://github.com/%s/commit/%s", addon.getRepo().getOwnerName(), commit.sha));
                 t.row();
             }
         }
@@ -137,6 +138,16 @@ public class CommitsScreen extends WindowScreen {
         }
 
         return sb.toString();
+    }
+
+    @Override
+    public boolean touchCancelled(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
+        return false;
     }
 
     private static class Response {

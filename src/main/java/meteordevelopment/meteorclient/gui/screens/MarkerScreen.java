@@ -41,13 +41,23 @@ public class MarkerScreen extends WindowScreen {
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void update(float delta) {
+        super.update(delta);
 
         marker.settings.tick(settingsContainer, theme);
     }
 
     public WWidget getWidget(GuiTheme theme) {
         return null;
+    }
+
+    @Override
+    public boolean touchCancelled(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
+        return false;
     }
 }

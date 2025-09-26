@@ -5,10 +5,11 @@
 
 package meteordevelopment.meteorclient.renderer;
 
+import com.badlogic.gdx.math.Matrix4;
 import meteordevelopment.meteorclient.gui.renderer.packer.TextureRegion;
 import meteordevelopment.meteorclient.utils.PreInit;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.util.math.MatrixStack;
+//import net.minecraft.client.util.math.MatrixStack;
 
 public class Renderer2D {
     public static Renderer2D COLOR;
@@ -47,7 +48,7 @@ public class Renderer2D {
         lines.end();
     }
 
-    public void render(MatrixStack matrices) {
+    public void render(Matrix4 matrices) {
         triangles.render(matrices);
         lines.render(matrices);
     }

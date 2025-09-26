@@ -5,7 +5,12 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
+
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.BooleanDataAttribute;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -36,16 +41,14 @@ public class BoolSetting extends Setting<Boolean> {
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        tag.putBoolean("value", get());
-
+    public DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new BooleanDataAttribute(get())));
         return tag;
     }
 
     @Override
-    public Boolean load(NbtCompound tag) {
-        set(tag.getBoolean("value"));
-
+    public Boolean load(DataTagManifest tag) {
+        set(tag.getTag("value").getTagAsType(Boolean.TYPE).getValue());
         return get();
     }
 

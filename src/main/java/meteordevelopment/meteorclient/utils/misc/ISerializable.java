@@ -5,10 +5,11 @@
 
 package meteordevelopment.meteorclient.utils.misc;
 
-import net.minecraft.nbt.NbtCompound;
+import com.github.puzzle.game.items.data.DataTagManifest;
+//import net.minecraft.nbt.NbtCompound;
 
 public interface ISerializable<T> {
-    NbtCompound toTag();
+    DataTagManifest toTag();
 
-    T fromTag(NbtCompound tag);
+    T fromTag(DataTagManifest tag);
 }

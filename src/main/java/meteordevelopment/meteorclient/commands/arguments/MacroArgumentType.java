@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.commands.arguments;
 
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -14,8 +15,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import meteordevelopment.meteorclient.systems.macros.Macro;
 import meteordevelopment.meteorclient.systems.macros.Macros;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
+import meteordevelopment.stolen.CommandSource;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class MacroArgumentType implements ArgumentType<Macro> {
     private static final MacroArgumentType INSTANCE = new MacroArgumentType();
-    private static final DynamicCommandExceptionType NO_SUCH_MACRO = new DynamicCommandExceptionType(name -> Text.literal("Macro with name " + name + " doesn't exist."));
+    private static final DynamicCommandExceptionType NO_SUCH_MACRO = new DynamicCommandExceptionType(name ->  new LiteralMessage("Macro with name " + name + " doesn't exist."));
 
     public static MacroArgumentType create() {
         return INSTANCE;

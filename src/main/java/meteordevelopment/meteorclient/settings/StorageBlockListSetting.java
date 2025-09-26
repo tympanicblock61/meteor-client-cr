@@ -5,21 +5,29 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import com.mojang.serialization.Lifecycle;
+//import com.mojang.serialization.Lifecycle;
+import com.github.puzzle.core.registries.GenericRegistry;
+import com.github.puzzle.core.registries.IRegistry;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
+import finalforeach.cosmicreach.blockentities.*;
+import finalforeach.cosmicreach.util.Identifier;
 import it.unimi.dsi.fastutil.objects.ObjectIterators;
 import meteordevelopment.meteorclient.MeteorClient;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.SimpleRegistry;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
-import net.minecraft.util.Identifier;
+//import net.minecraft.block.entity.BlockEntityType;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtElement;
+//import net.minecraft.nbt.NbtList;
+//import net.minecraft.nbt.NbtString;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.registry.Registry;
+//import net.minecraft.registry.RegistryKey;
+//import net.minecraft.registry.SimpleRegistry;
+//import net.minecraft.registry.entry.RegistryEntry;
+//import net.minecraft.registry.entry.RegistryEntryList;
+//import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,29 +35,15 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
-    public static final BlockEntityType<?>[] STORAGE_BLOCKS = new BlockEntityType[]{
-        BlockEntityType.BARREL,
-        BlockEntityType.BLAST_FURNACE,
-        BlockEntityType.BREWING_STAND,
-        BlockEntityType.CAMPFIRE,
-        BlockEntityType.CHEST,
-        BlockEntityType.CHISELED_BOOKSHELF,
-        BlockEntityType.CRAFTER,
-        BlockEntityType.DISPENSER,
-        BlockEntityType.DECORATED_POT,
-        BlockEntityType.DROPPER,
-        BlockEntityType.ENDER_CHEST,
-        BlockEntityType.FURNACE,
-        BlockEntityType.HOPPER,
-        BlockEntityType.SHULKER_BOX,
-        BlockEntityType.SMOKER,
-        BlockEntityType.TRAPPED_CHEST,
+public class StorageBlockListSetting extends Setting<List<Identifier>> {
+    public static final Identifier[] STORAGE_BLOCKS = new Identifier[]{
+        Identifier.of(BlockEntityFurnace.BLOCK_ENTITY_ID),
+        Identifier.of(BlockEntityItemContainer.BLOCK_ENTITY_ID),
     };
 
-    public static final Registry<BlockEntityType<?>> REGISTRY = new SRegistry();
+    public static final IRegistry<Identifier> REGISTRY = new SRegistry();
 
-    public StorageBlockListSetting(String name, String description, List<BlockEntityType<?>> defaultValue, Consumer<List<BlockEntityType<?>>> onChanged, Consumer<Setting<List<BlockEntityType<?>>>> onModuleActivated, IVisible visible) {
+    public StorageBlockListSetting(String name, String description, List<Identifier> defaultValue, Consumer<List<Identifier>> onChanged, Consumer<Setting<List<Identifier>>> onModuleActivated, IVisible visible) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
     }
 
@@ -59,62 +53,55 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
     }
 
     @Override
-    protected List<BlockEntityType<?>> parseImpl(String str) {
+    protected List<Identifier> parseImpl(String str) {
         String[] values = str.split(",");
-        List<BlockEntityType<?>> blocks = new ArrayList<>(values.length);
-
-        try {
-            for (String value : values) {
-                BlockEntityType<?> block = parseId(Registries.BLOCK_ENTITY_TYPE, value);
-                if (block != null) blocks.add(block);
-            }
-        } catch (Exception ignored) {
+        List<Identifier> blocks = new ArrayList<>(values.length);
+        for (String value : values) {
+            Identifier block = Identifier.of(str);
+            if (List.of(STORAGE_BLOCKS).contains(block)) blocks.add(block);
         }
-
         return blocks;
     }
 
     @Override
-    protected boolean isValueValid(List<BlockEntityType<?>> value) {
+    protected boolean isValueValid(List<Identifier> value) {
         return true;
     }
 
     @Override
     public Iterable<Identifier> getIdentifierSuggestions() {
-        return Registries.BLOCK_ENTITY_TYPE.getIds();
+        return List.of(STORAGE_BLOCKS);
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        NbtList valueTag = new NbtList();
-        for (BlockEntityType<?> type : get()) {
-            Identifier id = Registries.BLOCK_ENTITY_TYPE.getId(type);
-            if (id != null) valueTag.add(NbtString.of(id.toString()));
+    public DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<StringDataAttribute> valueTag = new ListDataAttribute<>();
+        List<StringDataAttribute> list_ = new ArrayList<>();
+        for (Identifier type : get()) {
+            list_.add(new StringDataAttribute(type.toString()));
         }
-        tag.put("value", valueTag);
-
+        valueTag.setValue(list_);
+        tag.addTag(new DataTag<>("value", valueTag));
         return tag;
     }
 
     @Override
-    public List<BlockEntityType<?>> load(NbtCompound tag) {
+    public List<Identifier> load(DataTagManifest tag) {
         get().clear();
-
-        NbtList valueTag = tag.getList("value", 8);
-        for (NbtElement tagI : valueTag) {
-            BlockEntityType<?> type = Registries.BLOCK_ENTITY_TYPE.get(Identifier.of(tagI.asString()));
-            if (type != null) get().add(type);
+        List<StringDataAttribute> valueTag = tag.getTag("value").getTagAsType((Class<List<StringDataAttribute>>) (Class<?>) List.class).getValue();
+        for (StringDataAttribute tagI : valueTag) {
+            Identifier type = Identifier.of(tagI.getValue());
+            if (List.of(STORAGE_BLOCKS).contains(type)) get().add(type);
         }
-
         return get();
     }
 
-    public static class Builder extends SettingBuilder<Builder, List<BlockEntityType<?>>, StorageBlockListSetting> {
+    public static class Builder extends SettingBuilder<Builder, List<Identifier>, StorageBlockListSetting> {
         public Builder() {
             super(new ArrayList<>(0));
         }
 
-        public Builder defaultValue(BlockEntityType<?>... defaults) {
+        public Builder defaultValue(Identifier... defaults) {
             return defaultValue(defaults != null ? Arrays.asList(defaults) : new ArrayList<>());
         }
 
@@ -124,124 +111,19 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
         }
     }
 
-    private static class SRegistry extends SimpleRegistry<BlockEntityType<?>> {
+    private static class SRegistry extends GenericRegistry<Identifier> {
         public SRegistry() {
-            super(RegistryKey.ofRegistry(MeteorClient.identifier("storage-blocks")), Lifecycle.stable());
+            super(MeteorClient.identifier("storage-blocks"));
         }
 
-        @Override
         public int size() {
             return STORAGE_BLOCKS.length;
         }
 
-        @Nullable
-        @Override
-        public Identifier getId(BlockEntityType<?> entry) {
-            return null;
-        }
-
-        @Override
-        public Optional<RegistryKey<BlockEntityType<?>>> getKey(BlockEntityType<?> entry) {
-            return Optional.empty();
-        }
-
-        @Override
-        public int getRawId(@Nullable BlockEntityType<?> entry) {
-            return 0;
-        }
-
-        @Nullable
-        @Override
-        public BlockEntityType<?> get(@Nullable RegistryKey<BlockEntityType<?>> key) {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public BlockEntityType<?> get(@Nullable Identifier id) {
-            return null;
-        }
-
-        @Override
-        public Lifecycle getLifecycle() {
-            return null;
-        }
-
-        @Override
-        public Set<Identifier> getIds() {
-            return null;
-        }
-
-        @Override
-        public BlockEntityType<?> getOrThrow(int index) {
-            return super.getOrThrow(index);
-        }
-
-        @Override
-        public boolean containsId(Identifier id) {
-            return false;
-        }
-
-        @Nullable
-        @Override
-        public BlockEntityType<?> get(int index) {
-            return null;
-        }
-
         @NotNull
         @Override
-        public Iterator<BlockEntityType<?>> iterator() {
+        public Iterator<Identifier> iterator() {
             return ObjectIterators.wrap(STORAGE_BLOCKS);
-        }
-
-        @Override
-        public boolean contains(RegistryKey<BlockEntityType<?>> key) {
-            return false;
-        }
-
-        @Override
-        public Set<Map.Entry<RegistryKey<BlockEntityType<?>>, BlockEntityType<?>>> getEntrySet() {
-            return null;
-        }
-
-        @Override
-        public Optional<RegistryEntry.Reference<BlockEntityType<?>>> getRandom(net.minecraft.util.math.random.Random random) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Registry<BlockEntityType<?>> freeze() {
-            return null;
-        }
-
-        @Override
-        public RegistryEntry.Reference<BlockEntityType<?>> createEntry(BlockEntityType<?> value) {
-            return null;
-        }
-
-        @Override
-        public Optional<RegistryEntry.Reference<BlockEntityType<?>>> getEntry(int rawId) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<RegistryEntry.Reference<BlockEntityType<?>>> getEntry(Identifier id) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Stream<RegistryEntry.Reference<BlockEntityType<?>>> streamEntries() {
-            return null;
-        }
-
-        @Override
-        public Stream<RegistryEntryList.Named<BlockEntityType<?>>> streamTags() {
-            return null;
-        }
-
-        @Override
-        public Set<RegistryKey<BlockEntityType<?>>> getKeys() {
-            return null;
         }
     }
 }

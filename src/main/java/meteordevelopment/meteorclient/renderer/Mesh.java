@@ -5,17 +5,32 @@
 
 package meteordevelopment.meteorclient.renderer;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+//import com.mojang.blaze3d.systems.RenderSystem;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
+import finalforeach.cosmicreach.entities.PlayerController;
+import finalforeach.cosmicreach.gamestates.InGame;
+import finalforeach.cosmicreach.ui.UI;
+import meteordevelopment.meteorclient.mixins.AccessorInGame;
+import meteordevelopment.meteorclient.mixins.AccessorUI;
 import meteordevelopment.meteorclient.utils.Utils;
+import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4fStack;
+//import net.minecraft.client.util.math.MatrixStack;
+//import net.minecraft.util.math.Vec3d;
+//import org.joml.Matrix4fStack;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL30;
 
+import java.lang.ref.Reference;
 import java.nio.ByteBuffer;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static meteordevelopment.meteorclient.MeteorClient.client;
 import static org.lwjgl.opengl.GL32C.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
@@ -59,6 +74,8 @@ public class Mesh {
     private boolean building, rendering3D;
     private double cameraX, cameraZ;
     private boolean beganRendering;
+
+    private Matrix4 previousMatrix;
 
     public Mesh(DrawMode drawMode, Attrib... attributes) {
         int stride = 0;
@@ -114,7 +131,7 @@ public class Mesh {
         rendering3D = Utils.rendering3D;
 
         if (rendering3D) {
-            Vec3d camera = mc.gameRenderer.getCamera().getPos();
+            Vector3 camera = PlayerUtils.playerCamera().position;
 
             cameraX = camera.x;
             cameraZ = camera.z;
@@ -243,29 +260,38 @@ public class Mesh {
         building = false;
     }
 
-    public void beginRender(MatrixStack matrices) {
+    public void beginRender(Matrix4 projectionMatrix) {
         GL.saveState();
 
-        if (depthTest) GL.enableDepth();
-        else GL.disableDepth();
+        if (depthTest) {
+            Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        } else {
+            Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+        }
         GL.enableBlend();
         GL.disableCull();
         GL.enableLineSmooth();
 
         if (rendering3D) {
-            Matrix4fStack matrixStack = RenderSystem.getModelViewStack();
-            matrixStack.pushMatrix();
+            // TODO not so sure about this
 
-            if (matrices != null) matrixStack.mul(matrices.peek().getPositionMatrix());
+            UI ui = ((AccessorInGame)InGame.IN_GAME).getUI();
+            ShapeRenderer shapeRenderer = ((AccessorUI)ui).getShapeRenderer();
 
-            Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
-            matrixStack.translate(0, (float) -cameraPos.y, 0);
+            previousMatrix = shapeRenderer.getProjectionMatrix();
+
+            shapeRenderer.setProjectionMatrix(projectionMatrix);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+            Vector3 cameraPos = PlayerUtils.playerCamera().position;
+            shapeRenderer.translate(0, -cameraPos.y, 0);
+
         }
 
         beganRendering = true;
     }
 
-    public void render(MatrixStack matrices) {
+    public void render(Matrix4 matrices) {
         if (building) end();
 
         if (indicesCount > 0) {
@@ -289,7 +315,13 @@ public class Mesh {
     }
 
     public void endRender() {
-        if (rendering3D) RenderSystem.getModelViewStack().popMatrix();
+        if (rendering3D) {
+            try {
+                UI ui = (UI) Reflections.InGame$ui.get(InGame.IN_GAME);
+                ShapeRenderer shapeRenderer = (ShapeRenderer) Reflections.UI$shapeRenderer.get(ui);
+                shapeRenderer.setProjectionMatrix(previousMatrix);
+            } catch (Exception ignored) {}
+        }
 
         GL.restoreState();
 

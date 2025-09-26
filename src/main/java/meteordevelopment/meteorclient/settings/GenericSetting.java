@@ -5,10 +5,13 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
 import meteordevelopment.meteorclient.gui.utils.IScreenFactory;
 import meteordevelopment.meteorclient.utils.misc.ICopyable;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
 
 import java.util.function.Consumer;
 
@@ -34,16 +37,14 @@ public class GenericSetting<T extends ICopyable<T> & ISerializable<T> & IScreenF
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        tag.put("value", get().toTag());
-
+    public DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new DataTagManifestAttribute(get().toTag())));
         return tag;
     }
 
     @Override
-    public T load(NbtCompound tag) {
-        get().fromTag(tag.getCompound("value"));
-
+    public T load(DataTagManifest tag) {
+        get().fromTag(tag.getTag("value").getTagAsType(DataTagManifest.class).getValue());
         return get();
     }
 

@@ -5,53 +5,66 @@
 
 package meteordevelopment.meteorclient.settings;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.math.BlockPos;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import com.github.puzzle.game.items.data.attributes.IntDataAttribute;
+import com.github.puzzle.game.items.data.attributes.ListDataAttribute;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.util.math.BlockPos;
 
+import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class BlockPosSetting extends Setting<BlockPos> {
-    public BlockPosSetting(String name, String description, BlockPos defaultValue, Consumer<BlockPos> onChanged, Consumer<Setting<BlockPos>> onModuleActivated, IVisible visible) {
+public class BlockPosSetting extends Setting<BlockPosition> {
+    public BlockPosSetting(String name, String description, BlockPosition defaultValue, Consumer<BlockPosition> onChanged, Consumer<Setting<BlockPosition>> onModuleActivated, IVisible visible) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
     }
 
     @Override
-    protected BlockPos parseImpl(String str) {
+    protected BlockPosition parseImpl(String str) {
         List<String> values = List.of(str.split(","));
         if (values.size() != 3) return null;
 
-        BlockPos bp = null;
+        BlockPosition bp = null;
         try {
-            bp = new BlockPos(Integer.parseInt(values.get(0)), Integer.parseInt(values.get(1)), Integer.parseInt(values.get(2)));
+            bp = BlockPosition.ofGlobalZoneless(Integer.parseInt(values.get(0)), Integer.parseInt(values.get(1)), Integer.parseInt(values.get(2)));
         }
         catch (NumberFormatException ignored) {}
         return bp;
     }
 
     @Override
-    protected boolean isValueValid(BlockPos value) {
+    protected boolean isValueValid(BlockPosition value) {
         return true;
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        tag.putIntArray("value", new int[] {value.getX(), value.getY(), value.getZ()});
-
+    protected DataTagManifest save(DataTagManifest tag) {
+        ListDataAttribute<IntDataAttribute> list = new ListDataAttribute<>();
+        List<IntDataAttribute> list_ = new ArrayList<>();
+        int[] list_i = new int[] {value.getGlobalX(), value.getGlobalY(), value.getGlobalZ()};
+        for (int i : list_i) {
+            list_.add(new IntDataAttribute(i));
+        }
+        list.setValue(list_);
+        tag.addTag(new DataTag<>("value", list));
         return tag;
     }
 
     @Override
-    protected BlockPos load(NbtCompound tag) {
-        int[] value = tag.getIntArray("value");
-        set(new BlockPos(value[0], value[1], value[2]));
-
+    protected BlockPosition load(DataTagManifest tag) {
+        List<IntDataAttribute> list = tag.getTag("value").getTagAsType((Class<List<IntDataAttribute>>) (Class<?>) List.class).getValue();
+        set(BlockPosition.ofGlobalZoneless(list.get(0).getValue(), list.get(1).getValue(), list.get(2).getValue()));
         return get();
     }
 
-    public static class Builder extends SettingBuilder<Builder, BlockPos, BlockPosSetting> {
+    public static class Builder extends SettingBuilder<Builder, BlockPosition, BlockPosSetting> {
         public Builder() {
-            super(new BlockPos(0, 0, 0));
+            super(BlockPosition.ofGlobalZoneless(0, 0, 0));
         }
 
         @Override

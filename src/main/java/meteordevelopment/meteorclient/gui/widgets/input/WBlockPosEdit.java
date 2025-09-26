@@ -5,6 +5,11 @@
 
 package meteordevelopment.meteorclient.gui.widgets.input;
 
+import finalforeach.cosmicreach.GameSingletons;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+import finalforeach.cosmicreach.entities.player.Player;
+import finalforeach.cosmicreach.gamestates.GameState;
+import finalforeach.cosmicreach.gamestates.InGame;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
@@ -13,11 +18,12 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.marker.Marker;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
+//import net.minecraft.client.gui.screen.Screen;
+//import net.minecraft.util.hit.HitResult;
+//import net.minecraft.util.math.BlockPos;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static meteordevelopment.meteorclient.MeteorClient.client;
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static meteordevelopment.meteorclient.utils.Utils.canUpdate;
 
 public class WBlockPosEdit extends WHorizontalList {
@@ -26,14 +32,14 @@ public class WBlockPosEdit extends WHorizontalList {
 
     private WTextBox textBoxX, textBoxY, textBoxZ;
 
-    private Screen previousScreen;
+    private GameState previousScreen;
 
-    private BlockPos value;
-    private BlockPos lastValue;
+    private BlockPosition value;
+    private BlockPosition lastValue;
 
     private boolean clicking;
 
-    public WBlockPosEdit(BlockPos value) {
+    public WBlockPosEdit(BlockPosition value) {
         this.value = value;
     }
 
@@ -49,14 +55,15 @@ public class WBlockPosEdit extends WHorizontalList {
 
                 clicking = true;
                 MeteorClient.EVENT_BUS.subscribe(this);
-                previousScreen = mc.currentScreen;
-                mc.setScreen(null);
+                previousScreen = GameState.currentGameState;
+                GameState.switchToGameState(GameState.IN_GAME);
             };
 
             WButton here = add(theme.button("Set Here")).expandX().widget();
             here.action = () -> {
                 lastValue = value;
-                set(new BlockPos(mc.player.getBlockPos()));
+                Player player = client.getLocalPlayer();
+                set(BlockPosition.ofGlobal(player.getZone(), (int) player.getPosition().x, (int) player.getPosition().y, (int) player.getPosition().z));
                 newValueCheck();
 
                 clear();
@@ -71,16 +78,17 @@ public class WBlockPosEdit extends WHorizontalList {
             clicking = false;
             event.cancel();
             MeteorClient.EVENT_BUS.unsubscribe(this);
-            mc.setScreen(previousScreen);
+            GameState.switchToGameState(previousScreen);
         }
     }
 
     @EventHandler
     private void onInteractBlock(InteractBlockEvent event) {
         if (clicking) {
-            if (event.result.getType() == HitResult.Type.MISS) return;
-            lastValue = value;
-            set(event.result.getBlockPos());
+            // TODO fix
+//            if (event.result.getType() == HitResult.Type.MISS) return;
+//            lastValue = value;
+//            set(event.result.getBlockPos());
             newValueCheck();
 
             clear();
@@ -89,7 +97,7 @@ public class WBlockPosEdit extends WHorizontalList {
             clicking = false;
             event.cancel();
             MeteorClient.EVENT_BUS.unsubscribe(this);
-            mc.setScreen(previousScreen);
+            GameState.switchToGameState(previousScreen);
         }
     }
 
@@ -114,25 +122,25 @@ public class WBlockPosEdit extends WHorizontalList {
         return good;
     }
 
-    public BlockPos get() {
+    public BlockPosition get() {
         return value;
     }
 
-    public void set(BlockPos value) {
+    public void set(BlockPosition value) {
         this.value = value;
     }
 
     private void addTextBox() {
-        textBoxX = add(theme.textBox(Integer.toString(value.getX()), this::filter)).minWidth(75).widget();
-        textBoxY = add(theme.textBox(Integer.toString(value.getY()), this::filter)).minWidth(75).widget();
-        textBoxZ = add(theme.textBox(Integer.toString(value.getZ()), this::filter)).minWidth(75).widget();
+        textBoxX = add(theme.textBox(Integer.toString(value.getGlobalX()), this::filter)).minWidth(75).widget();
+        textBoxY = add(theme.textBox(Integer.toString(value.getGlobalY()), this::filter)).minWidth(75).widget();
+        textBoxZ = add(theme.textBox(Integer.toString(value.getGlobalZ()), this::filter)).minWidth(75).widget();
 
         textBoxX.actionOnUnfocused = () -> {
             lastValue = value;
-            if (textBoxX.get().isEmpty()) set(new BlockPos(0, 0, 0));
+            if (textBoxX.get().isEmpty()) set(BlockPosition.ofGlobalZoneless(0, 0, 0));
             else {
                 try {
-                    set(new BlockPos(Integer.parseInt(textBoxX.get()), value.getY(), value.getZ()));
+                    set(BlockPosition.ofGlobalZoneless(Integer.parseInt(textBoxX.get()), value.getGlobalY(), value.getGlobalZ()));
                 } catch (NumberFormatException ignored) {}
             }
             newValueCheck();
@@ -140,10 +148,10 @@ public class WBlockPosEdit extends WHorizontalList {
 
         textBoxY.actionOnUnfocused = () -> {
             lastValue = value;
-            if (textBoxY.get().isEmpty()) set(new BlockPos(0, 0, 0));
+            if (textBoxY.get().isEmpty()) set(BlockPosition.ofGlobalZoneless(0, 0, 0));
             else {
                 try {
-                    set(new BlockPos(value.getX(), Integer.parseInt(textBoxY.get()), value.getZ()));
+                    set(BlockPosition.ofGlobalZoneless(value.getGlobalX(), Integer.parseInt(textBoxY.get()), value.getGlobalZ()));
                 } catch (NumberFormatException ignored) {}
             }
             newValueCheck();
@@ -151,10 +159,10 @@ public class WBlockPosEdit extends WHorizontalList {
 
         textBoxZ.actionOnUnfocused = () -> {
             lastValue = value;
-            if (textBoxZ.get().isEmpty()) set(new BlockPos(0, 0, 0));
+            if (textBoxZ.get().isEmpty()) set(BlockPosition.ofGlobalZoneless(0, 0, 0));
             else {
                 try {
-                    set(new BlockPos(value.getX(), value.getY(), Integer.parseInt(textBoxZ.get())));
+                    set(BlockPosition.ofGlobalZoneless(value.getGlobalX(), value.getGlobalY(), Integer.parseInt(textBoxZ.get())));
                 } catch (NumberFormatException ignored) {}
             }
             newValueCheck();

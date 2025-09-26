@@ -5,9 +5,12 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.StringDataAttribute;
 import meteordevelopment.meteorclient.gui.utils.CharFilter;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
-import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.nbt.NbtCompound;
 
 import java.util.function.Consumer;
 
@@ -35,16 +38,14 @@ public class StringSetting extends Setting<String> {
     }
 
     @Override
-    public NbtCompound save(NbtCompound tag) {
-        tag.putString("value", get());
-
+    public DataTagManifest save(DataTagManifest tag) {
+        tag.addTag(new DataTag<>("value", new StringDataAttribute(get())));
         return tag;
     }
 
     @Override
-    public String load(NbtCompound tag) {
-        set(tag.getString("value"));
-
+    public String load(DataTagManifest tag) {
+        set(tag.getTag("value").getTagAsType(String.class).getValue());
         return get();
     }
 

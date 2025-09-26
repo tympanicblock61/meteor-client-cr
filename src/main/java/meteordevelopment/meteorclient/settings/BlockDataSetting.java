@@ -5,14 +5,20 @@
 
 package meteordevelopment.meteorclient.settings;
 
+import com.github.puzzle.game.PuzzleRegistries;
+import com.github.puzzle.game.items.data.DataTag;
+import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.items.data.attributes.DataTagManifestAttribute;
+import finalforeach.cosmicreach.blocks.Block;
+import finalforeach.cosmicreach.util.Identifier;
 import meteordevelopment.meteorclient.utils.misc.IChangeable;
 import meteordevelopment.meteorclient.utils.misc.ICopyable;
 import meteordevelopment.meteorclient.utils.misc.IGetter;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+//import net.minecraft.block.Block;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.registry.Registries;
+//import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,23 +49,23 @@ public class BlockDataSetting<T extends ICopyable<T> & ISerializable<T> & IChang
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        NbtCompound valueTag = new NbtCompound();
+    protected DataTagManifest save(DataTagManifest tag) {
+        DataTagManifest valueTag = new DataTagManifest();
         for (Block block : get().keySet()) {
-            valueTag.put(Registries.BLOCK.getId(block).toString(), get().get(block).toTag());
+            valueTag.addTag(new DataTag<>(block.getStringId(), new DataTagManifestAttribute(get().get(block).toTag())));
         }
-        tag.put("value", valueTag);
+        tag.addTag(new DataTag<>("value", new DataTagManifestAttribute(valueTag)));
 
         return tag;
     }
 
     @Override
-    protected Map<Block, T> load(NbtCompound tag) {
+    protected Map<Block, T> load(DataTagManifest tag) {
         get().clear();
 
-        NbtCompound valueTag = tag.getCompound("value");
+        DataTagManifest valueTag = tag.getTag("value").getTagAsType(DataTagManifest.class).getValue();
         for (String key : valueTag.getKeys()) {
-            get().put(Registries.BLOCK.get(Identifier.of(key)), defaultData.get().copy().fromTag(valueTag.getCompound(key)));
+            get().put((Block) PuzzleRegistries.BLOCKS.get(Identifier.of(key)), defaultData.get().copy().fromTag(valueTag.getTag(key).getTagAsType(DataTagManifest.class).getValue()));
         }
 
         return get();

@@ -5,15 +5,17 @@
 
 package meteordevelopment.meteorclient.events.entity.player;
 
-import net.minecraft.fluid.FluidState;
+//import net.minecraft.fluid.FluidState;
+
+import finalforeach.cosmicreach.blocks.BlockState;
 
 public class CanWalkOnFluidEvent {
     private static final CanWalkOnFluidEvent INSTANCE = new CanWalkOnFluidEvent();
 
-    public FluidState fluidState;
+    public BlockState fluidState;
     public boolean walkOnFluid;
 
-    public static CanWalkOnFluidEvent get(FluidState fluid) {
+    public static CanWalkOnFluidEvent get(BlockState fluid) {
         INSTANCE.fluidState = fluid;
         INSTANCE.walkOnFluid = false;
         return INSTANCE;

@@ -17,6 +17,9 @@ import meteordevelopment.meteorclient.utils.Utils;
 public class Reach extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+
+    // TODO would need a mixin into raycasts for this to work because raycast distance is the reach for entities and blocks
+    // class BlockRaycasts method raycast
     private final Setting<Double> blockReach = sgGeneral.add(new DoubleSetting.Builder()
         .name("extra-block-reach")
         .description("The distance to add to your block reach.")

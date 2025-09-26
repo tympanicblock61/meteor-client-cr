@@ -5,24 +5,33 @@
 
 package meteordevelopment.meteorclient.utils.player;
 
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.Vector3;
+import finalforeach.cosmicreach.blocks.BlockPosition;
+import finalforeach.cosmicreach.entities.Entity;
+import finalforeach.cosmicreach.networking.client.ClientNetworkManager;
+import finalforeach.cosmicreach.networking.packets.entities.PlayerPositionPacket;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.utils.PreInit;
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.entity.Target;
 import meteordevelopment.meteorclient.utils.misc.Pool;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+//import net.minecraft.entity.Entity;
+//import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+//import net.minecraft.util.math.BlockPos;
+//import net.minecraft.util.math.MathHelper;
+//import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static meteordevelopment.meteorclient.MeteorClient.client;
+
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Rotations {
     private static final Pool<Rotation> rotationPool = new Pool<>(Rotation::new);
@@ -46,7 +55,7 @@ public class Rotations {
         MeteorClient.EVENT_BUS.subscribe(Rotations.class);
     }
 
-    public static void rotate(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
+    public static void rotate(float yaw, float pitch, int priority, boolean clientSide, Runnable callback) {
         Rotation rotation = rotationPool.get();
         rotation.set(yaw, pitch, priority, clientSide, callback);
 
@@ -58,19 +67,19 @@ public class Rotations {
         rotations.add(i, rotation);
     }
 
-    public static void rotate(double yaw, double pitch, int priority, Runnable callback) {
+    public static void rotate(float yaw, float pitch, int priority, Runnable callback) {
         rotate(yaw, pitch, priority, false, callback);
     }
 
-    public static void rotate(double yaw, double pitch, Runnable callback) {
+    public static void rotate(float yaw, float pitch, Runnable callback) {
         rotate(yaw, pitch, 0, callback);
     }
 
-    public static void rotate(double yaw, double pitch, int priority) {
+    public static void rotate(float yaw, float pitch, int priority) {
         rotate(yaw, pitch, priority, null);
     }
 
-    public static void rotate(double yaw, double pitch) {
+    public static void rotate(float yaw, float pitch) {
         rotate(yaw, pitch, 0, null);
     }
 
@@ -85,7 +94,7 @@ public class Rotations {
 
     @EventHandler
     private static void onSendMovementPacketsPre(SendMovementPacketsEvent.Pre event) {
-        if (mc.cameraEntity != mc.player) return;
+        if (client.getLocalPlayer() == null) return;
         sentLastRotation = false;
 
         if (!rotations.isEmpty()) {
@@ -117,17 +126,24 @@ public class Rotations {
     }
 
     private static void setClientRotation(Rotation rotation) {
-        preYaw = mc.player.getYaw();
-        prePitch = mc.player.getPitch();
+        preYaw = PlayerUtils.playerYaw();
+        prePitch = PlayerUtils.playerPitch();
 
-        mc.player.setYaw((float) rotation.yaw);
-        mc.player.setPitch((float) rotation.pitch);
+
+        //TODO figure out which direction view is correct
+
+//        Camera camera = PlayerUtils.playerCamera();
+//        camera.view.rotate(Vector3.Y, (float) rotation.yaw);
+//        camera.view.rotate(Vector3.X, (float) rotation.pitch);
+        Entity player = client.getLocalPlayer().getEntity();
+        player.viewDirection.rotate(Vector3.Y, preYaw);
+        player.viewDirection.rotate(Vector3.X, prePitch);
     }
 
     @EventHandler
     private static void onSendMovementPacketsPost(SendMovementPacketsEvent.Post event) {
         if (!rotations.isEmpty()) {
-            if (mc.cameraEntity == mc.player) {
+            if (client.getLocalPlayer() != null) {
                 rotations.get(i - 1).runCallback();
 
                 if (rotations.size() == 1) lastRotation = rotations.get(i - 1);
@@ -155,8 +171,13 @@ public class Rotations {
     }
 
     private static void resetPreRotation() {
-        mc.player.setYaw(preYaw);
-        mc.player.setPitch(prePitch);
+//        Camera camera = PlayerUtils.playerCamera();
+//        camera.view.rotate(Vector3.Y, preYaw);
+//        camera.view.rotate(Vector3.X, prePitch);
+        //TODO figure out which direction view is correct
+        Entity player = client.getLocalPlayer().getEntity();
+        player.viewDirection.rotate(Vector3.Y, preYaw);
+        player.viewDirection.rotate(Vector3.X, prePitch);
     }
 
     @EventHandler
@@ -164,70 +185,79 @@ public class Rotations {
         rotationTimer++;
     }
 
-    public static double getYaw(Entity entity) {
-        return mc.player.getYaw() + MathHelper.wrapDegrees((float) Math.toDegrees(Math.atan2(entity.getZ() - mc.player.getZ(), entity.getX() - mc.player.getX())) - 90f - mc.player.getYaw());
+    public static float getYaw(Entity entity) {
+        Entity player = client.getLocalPlayer().getEntity();
+        return PlayerUtils.playerYaw() +
+            PlayerUtils.wrapDegrees((float) Math.toDegrees(Math.atan2(entity.position.z - player.position.z, entity.position.x - player.position.x)) - 90f - PlayerUtils.playerYaw());
     }
 
-    public static double getYaw(Vec3d pos) {
-        return mc.player.getYaw() + MathHelper.wrapDegrees((float) Math.toDegrees(Math.atan2(pos.getZ() - mc.player.getZ(), pos.getX() - mc.player.getX())) - 90f - mc.player.getYaw());
+    public static float getYaw(Vector3 pos) {
+        Entity player = client.getLocalPlayer().getEntity();
+        return PlayerUtils.playerYaw() + PlayerUtils.wrapDegrees((float) Math.toDegrees(Math.atan2(pos.z - player.position.z, pos.x - player.position.x)) - 90f - PlayerUtils.playerYaw());
     }
 
-    public static double getPitch(Vec3d pos) {
-        double diffX = pos.getX() - mc.player.getX();
-        double diffY = pos.getY() - (mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()));
-        double diffZ = pos.getZ() - mc.player.getZ();
+    public static float getPitch(Vector3 pos) {
+        Entity player = client.getLocalPlayer().getEntity();
 
-        double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
+        float diffX = pos.x - player.position.x;
+        float diffY = pos.y - EntityUtils.eyePosition(player);
+        float diffZ = pos.z - player.position.z;
 
-        return mc.player.getPitch() + MathHelper.wrapDegrees((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)) - mc.player.getPitch());
+        float diffXZ = (float) Math.sqrt(diffX * diffX + diffZ * diffZ);
+
+        return PlayerUtils.playerPitch() + PlayerUtils.wrapDegrees((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)) - PlayerUtils.playerPitch());
     }
 
-    public static double getPitch(Entity entity, Target target) {
-        double y;
-        if (target == Target.Head) y = entity.getEyeY();
-        else if (target == Target.Body) y = entity.getY() + entity.getHeight() / 2;
-        else y = entity.getY();
+    public static float getPitch(Entity entity, Target target) {
+        Entity player = client.getLocalPlayer().getEntity();
+        float y;
+        if (target == Target.Head) y = EntityUtils.eyePosition(entity);
+        else if (target == Target.Body) y = entity.position.y + entity.globalBoundingBox.getHeight() / 2;
+        else y = entity.position.y;
 
-        double diffX = entity.getX() - mc.player.getX();
-        double diffY = y - (mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()));
-        double diffZ = entity.getZ() - mc.player.getZ();
+        float diffX = entity.position.x - player.position.x;
+        float diffY = y - (player.position.y + player.globalBoundingBox.getHeight());
+        float diffZ = entity.position.z - player.position.z;
 
-        double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
+        float diffXZ = (float) Math.sqrt(diffX * diffX + diffZ * diffZ);
 
-        return mc.player.getPitch() + MathHelper.wrapDegrees((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)) - mc.player.getPitch());
+        return PlayerUtils.playerPitch() + PlayerUtils.wrapDegrees((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)) - PlayerUtils.playerPitch());
     }
 
-    public static double getPitch(Entity entity) {
+    public static float getPitch(Entity entity) {
         return getPitch(entity, Target.Body);
     }
 
-    public static double getYaw(BlockPos pos) {
-        return mc.player.getYaw() + MathHelper.wrapDegrees((float) Math.toDegrees(Math.atan2(pos.getZ() + 0.5 - mc.player.getZ(), pos.getX() + 0.5 - mc.player.getX())) - 90f - mc.player.getYaw());
+    public static float getYaw(BlockPosition pos) {
+        Entity player = client.getLocalPlayer().getEntity();
+        return PlayerUtils.playerYaw() + PlayerUtils.wrapDegrees((float) Math.toDegrees(Math.atan2(pos.getGlobalZ() + 0.5 - player.position.z, pos.getGlobalX() + 0.5 - player.position.x)) - 90f - PlayerUtils.playerYaw());
     }
 
-    public static double getPitch(BlockPos pos) {
-        double diffX = pos.getX() + 0.5 - mc.player.getX();
-        double diffY = pos.getY() + 0.5 - (mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()));
-        double diffZ = pos.getZ() + 0.5 - mc.player.getZ();
+    public static float getPitch(BlockPosition pos) {
+        Entity player = client.getLocalPlayer().getEntity();
 
-        double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
+        float diffX = pos.getGlobalX() + 0.5f - player.position.x;
+        float diffY = pos.getGlobalY() + 0.5f - (player.position.y + player.globalBoundingBox.getHeight());
+        float diffZ = pos.getGlobalZ() + 0.5f - player.position.z;
 
-        return mc.player.getPitch() + MathHelper.wrapDegrees((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)) - mc.player.getPitch());
+        float diffXZ = (float) Math.sqrt(diffX * diffX + diffZ * diffZ);
+
+        return PlayerUtils.playerPitch() + PlayerUtils.wrapDegrees((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)) - PlayerUtils.playerPitch());
     }
 
-    public static void setCamRotation(double yaw, double pitch) {
+    public static void setCamRotation(float yaw, float pitch) {
         serverYaw = (float) yaw;
         serverPitch = (float) pitch;
         rotationTimer = 0;
     }
 
     private static class Rotation {
-        public double yaw, pitch;
+        public float yaw, pitch;
         public int priority;
         public boolean clientSide;
         public Runnable callback;
 
-        public void set(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
+        public void set(float yaw, float pitch, int priority, boolean clientSide, Runnable callback) {
             this.yaw = yaw;
             this.pitch = pitch;
             this.priority = priority;
@@ -236,7 +266,10 @@ public class Rotations {
         }
 
         public void sendPacket() {
-            mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) yaw, (float) pitch, mc.player.isOnGround(), mc.player.horizontalCollision));
+            PlayerPositionPacket packet = new PlayerPositionPacket(client.getLocalPlayer());
+            packet.viewDir.rotate(Vector3.Y, yaw);
+            packet.viewDir.rotate(Vector3.X, pitch);
+            ClientNetworkManager.CLIENT.identity.send(packet);
             runCallback();
         }
 

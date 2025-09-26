@@ -14,12 +14,13 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import meteordevelopment.meteorclient.systems.friends.Friend;
 import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.stolen.CommandSource;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.command.CommandSource.suggestMatching;
+//import static net.minecraft.command.CommandSource.suggestMatching;
 
 public class FriendArgumentType implements ArgumentType<String> {
     private static final FriendArgumentType INSTANCE = new FriendArgumentType();
@@ -42,7 +43,7 @@ public class FriendArgumentType implements ArgumentType<String> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return suggestMatching(Streams.stream(Friends.get()).map(Friend::getName), builder);
+        return CommandSource.suggestMatching(Streams.stream(Friends.get()).map(Friend::getName), builder);
     }
 
     @Override

@@ -5,8 +5,8 @@
 
 package meteordevelopment.meteorclient.asm;
 
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.MappingResolver;
+//import net.fabricmc.loader.api.FabricLoader;
+//import net.fabricmc.loader.api.MappingResolver;
 
 public class Descriptor {
     private final String[] components;
@@ -15,8 +15,9 @@ public class Descriptor {
         this.components = components;
     }
 
+    // TODO remove
     public String toString(boolean method, boolean map) {
-        MappingResolver mappings = FabricLoader.getInstance().getMappingResolver();
+        //MappingResolver mappings = FabricLoader.getInstance().getMappingResolver();
         StringBuilder sb = new StringBuilder();
 
         if (method) sb.append('(');
@@ -26,7 +27,7 @@ public class Descriptor {
             String component = components[i];
 
             if (map && component.startsWith("L") && component.endsWith(";")) {
-                sb.append('L').append(mappings.mapClassName("intermediary", component.substring(1, component.length() - 1).replace('/', '.')).replace('.', '/')).append(';');
+                sb.append('L').append(component.substring(1, component.length() - 1).replace('.', '/')/*mappings.mapClassName("intermediary", component.substring(1, component.length() - 1).replace('/', '.')).replace('.', '/')*/).append(';');
             }
             else sb.append(component);
         }

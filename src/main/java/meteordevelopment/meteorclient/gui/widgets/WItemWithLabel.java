@@ -5,17 +5,18 @@
 
 package meteordevelopment.meteorclient.gui.widgets;
 
+import finalforeach.cosmicreach.items.ItemStack;
 import meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList;
 import meteordevelopment.meteorclient.utils.misc.Names;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffectUtil;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+//import net.minecraft.component.DataComponentTypes;
+//import net.minecraft.entity.effect.StatusEffectInstance;
+//import net.minecraft.entity.effect.StatusEffectUtil;
+//import net.minecraft.item.ItemStack;
+//import net.minecraft.item.Items;
 
-import java.util.Iterator;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+//import java.util.Iterator;
+//
+//import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class WItemWithLabel extends WHorizontalList {
     private ItemStack itemStack;
@@ -38,17 +39,17 @@ public class WItemWithLabel extends WHorizontalList {
     private String getStringToAppend() {
         String str = "";
 
-        if (itemStack.getItem() == Items.POTION) {
-            Iterator<StatusEffectInstance> effects = itemStack.getItem().getComponents().get(DataComponentTypes.POTION_CONTENTS).getEffects().iterator();
-            if (!effects.hasNext()) return str;
-
-            str += " ";
-
-            StatusEffectInstance effect = effects.next();
-            if (effect.getAmplifier() > 0) str += "%d ".formatted(effect.getAmplifier() + 1);
-
-            str += "(%s)".formatted(StatusEffectUtil.getDurationText(effect, 1, mc.world != null ? mc.world.getTickManager().getTickRate() : 20.0F).getString());
-        }
+//        if (itemStack.getItem() == Items.POTION) {
+//            Iterator<StatusEffectInstance> effects = itemStack.getItem().getComponents().get(DataComponentTypes.POTION_CONTENTS).getEffects().iterator();
+//            if (!effects.hasNext()) return str;
+//
+//            str += " ";
+//
+//            StatusEffectInstance effect = effects.next();
+//            if (effect.getAmplifier() > 0) str += "%d ".formatted(effect.getAmplifier() + 1);
+//
+//            str += "(%s)".formatted(StatusEffectUtil.getDurationText(effect, 1, mc.world != null ? mc.world.getTickManager().getTickRate() : 20.0F).getString());
+//        }
 
         return str;
     }
